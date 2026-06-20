@@ -346,7 +346,7 @@ function pol(r,a){const rad=(a-90)*Math.PI/180;return[CX+r*Math.cos(rad),CY+r*Ma
 function annular(r0,r1,a0,a1){const[x0,y0]=pol(r1,a0),[x1,y1]=pol(r1,a1),[x2,y2]=pol(r0,a1),[x3,y3]=pol(r0,a0);const l=(a1-a0)>180?1:0;return`M${x0},${y0} A${r1},${r1} 0 ${l} 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 ${l} 0 ${x3},${y3} Z`;}
 function tint(hex,amt){const n=parseInt(hex.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255,cl=v=>Math.max(0,Math.min(255,Math.round(v+(255-v)*amt)));return`rgb(${cl(r)},${cl(g)},${cl(b)})`;}
 function buildWheel(svg){
-  const ns="http://www.w3.org/2000/svg";svg.innerHTML="";const frag=document.createDocumentFragment();const selPaths=[];
+  const ns="http://www.w3.org/2000/svg";svg.innerHTML="";const frag=document.createDocumentFragment();const selPaths=[];const textFrag=document.createDocumentFragment();
   let a=0;const spans=cores.map(c=>{const n=Object.keys(DATA[c].secondaries).length;const s=n/totalSec*360;const o={c,a0:a,a1:a+s};a+=s;return o;});
   const path=(d,fill,ds,selected)=>{const p=document.createElementNS(ns,'path');p.setAttribute('d',d);
     p.setAttribute('fill',fill);
@@ -354,8 +354,8 @@ function buildWheel(svg){
     if(selected){p.setAttribute('class','sel');p.setAttribute('stroke-linejoin','round');}
     Object.entries(ds).forEach(([k,v])=>p.dataset[k]=v);
     if(selected)selPaths.push(p);else frag.appendChild(p);};
-  const rtext=(t,r,mid,sz)=>{const e=document.createElementNS(ns,'text');const[x,y]=pol(r,mid);let rot=mid>180?mid+90:mid-90;e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size',sz);e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.setAttribute('transform',`rotate(${rot} ${x} ${y})`);e.textContent=t;frag.appendChild(e);};
-  const ctext=(t,mid)=>{const e=document.createElementNS(ns,'text');const[x,y]=pol(95,mid);e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size',16);e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.textContent=t;frag.appendChild(e);};
+  const rtext=(t,r,mid,sz)=>{const e=document.createElementNS(ns,'text');const[x,y]=pol(r,mid);let rot=mid>180?mid+90:mid-90;e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size',sz);e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.setAttribute('transform',`rotate(${rot} ${x} ${y})`);e.textContent=t;textFrag.appendChild(e);};
+  const ctext=(t,mid)=>{const e=document.createElementNS(ns,'text');const[x,y]=pol(95,mid);e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size',16);e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.textContent=t;textFrag.appendChild(e);};
   spans.forEach(cs=>{
     const core=cs.c,col=DATA[core].color;
     const selC=selections.some(s=>s.core===core&&!s.secondary&&!s.tertiary);
@@ -374,6 +374,7 @@ function buildWheel(svg){
   });
   selPaths.forEach(p=>frag.appendChild(p));
   const c=document.createElementNS(ns,'circle');c.setAttribute('cx',CX);c.setAttribute('cy',CY);c.setAttribute('r',16);c.setAttribute('fill','#0E1428');c.setAttribute('stroke','#E8B04B');c.setAttribute('stroke-width','1.5');c.style.cursor='pointer';c.dataset.level='reset';frag.appendChild(c);
+  frag.appendChild(textFrag);
   svg.appendChild(frag);
 }
 function leaf(s){return s.tertiary||s.secondary||(lang==='es'?CORE_ES[s.core]:s.core);}
