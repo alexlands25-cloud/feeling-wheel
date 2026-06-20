@@ -66,6 +66,12 @@
 
   .selected{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--ink-3);border-radius:10px;padding:11px 14px;margin-bottom:16px}
   .schip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--txt)}
+  .thermo{margin:16px 0 2px}
+  .thermo-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--txt-soft);margin-bottom:7px}
+  .thermo-val{font-weight:700;font-size:13px}
+  .thermo-track{position:relative;height:12px;border-radius:7px;background:linear-gradient(90deg,#4F77C4 0%,#7E78A8 40%,#C9A24B 66%,#E0A458 100%)}
+  .thermo-marker{position:absolute;top:-3px;width:6px;height:18px;border-radius:3px;background:#fff;box-shadow:0 0 0 2px var(--ink),0 1px 5px rgba(0,0,0,.55);transform:translateX(-50%)}
+  .thermo-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--txt-dim);margin-top:6px}
   .selected .chip{width:12px;height:12px;border-radius:3px;flex:none}
   .selected .nm{font-family:'Fraunces',serif;font-size:18px}
   .selected .pth{color:var(--txt-soft);font-size:12px}
@@ -197,6 +203,8 @@
       <div class="stat"><div class="n" id="stWeek">0</div><div class="l" id="stWeekL">this week</div></div>
       <div class="stat"><div class="n" id="stStreak">0</div><div class="l" id="stStreakL">day streak</div></div>
     </div>
+    <div class="secl" id="balanceL">Mood balance</div>
+    <div id="histThermo" style="margin-bottom:24px"></div>
     <div class="secl" id="spendL">Where you've been spending time</div>
     <div id="bars" style="margin-bottom:8px"></div>
     <div class="jtools">
@@ -252,7 +260,7 @@ const UI={
    anchor:"Anchor from your Bible journal (verse or word)",anchorP:"e.g. Philippians 4:6–7…",
    jnew:"New journal entry",jsub:"Title it, write freely. Saved the second you hit save.",jtitle:"Title",jnotes:"Notes",
    jtitleP:"Give it a name…",jnotesP:"Whatever's on your mind today…",jsave:"Save entry",jpast:"Past entries",jsaved:"Entry saved",jnone:"No journal entries yet.",
-   ckTotal:"check-ins",ckWeek:"this week",ckStreak:"day streak",spend:"Where you've been spending time",
+   ckTotal:"check-ins",ckWeek:"this week",ckStreak:"day streak",spend:"Where you've been spending time",balance:"Mood balance",
    exportB:"Export backup",importB:"Import backup",timeline:"Timeline",tlnone:"Nothing logged yet. Your first check-in shows up here.",
    foot:"Saved to your private cloud and synced across your devices. Export backup any time for an extra copy.",
    needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…"},
@@ -274,7 +282,7 @@ const UI={
    anchor:"Ancla de tu diario bíblico (versículo o palabra)",anchorP:"ej. Filipenses 4:6–7…",
    jnew:"Nueva entrada de diario",jsub:"Ponle título, escribe libremente. Se guarda al instante.",jtitle:"Título",jnotes:"Notas",
    jtitleP:"Dale un nombre…",jnotesP:"Lo que tengas en mente hoy…",jsave:"Guardar entrada",jpast:"Entradas anteriores",jsaved:"Entrada guardada",jnone:"Aún no hay entradas de diario.",
-   ckTotal:"registros",ckWeek:"esta semana",ckStreak:"días seguidos",spend:"Dónde has pasado el tiempo",
+   ckTotal:"registros",ckWeek:"esta semana",ckStreak:"días seguidos",spend:"Dónde has pasado el tiempo",balance:"Balance emocional",
    exportB:"Exportar respaldo",importB:"Importar respaldo",timeline:"Línea de tiempo",tlnone:"Nada registrado aún. Tu primer registro aparecerá aquí.",
    foot:"Guardado en tu nube privada y sincronizado entre tus dispositivos. Exporta un respaldo cuando quieras.",
    needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…"}
@@ -383,6 +391,13 @@ function sameSel(a,b){return a.core===b.core&&(a.secondary||null)===(b.secondary
 function toggleSel(s){const i=selections.findIndex(x=>sameSel(x,s));if(i>=0)selections.splice(i,1);else selections.push(s);}
 function chipHTML(s){return`<span class="schip"><span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:${DATA[s.core].color}"></span>${leaf(s)}</span>`;}
 function feelingsOf(e){if(e.type==='checkin'&&e.body){try{const arr=JSON.parse(e.body);if(Array.isArray(arr)&&arr.length)return arr;}catch{}}if(e.core)return[{core:e.core,secondary:e.secondary,tertiary:e.tertiary}];return[];}
+const VALENCE={Happy:1,Surprised:0.5,Bad:0,Fearful:0,Angry:0,Disgusted:0,Sad:0};
+function moodScore(feels){if(!feels||!feels.length)return null;const sum=feels.reduce((a,f)=>a+(VALENCE[f.core]??0.5),0);return Math.round(sum/feels.length*100);}
+function zone(pct){if(pct>=67)return{en:'Light',es:'Ligero',col:'#E0A458'};if(pct>=34)return{en:'Mixed',es:'Mixto',col:'#C9A24B'};return{en:'Heavy',es:'Pesado',col:'#5A78C4'};}
+function thermoHTML(pct,label){if(pct==null)return'';const z=zone(pct),zl=lang==='es'?z.es:z.en;
+  return`<div class="thermo"><div class="thermo-top"><span>${label||''}</span><span class="thermo-val" style="color:${z.col}">${zl} · ${pct}%</span></div>
+    <div class="thermo-track"><div class="thermo-marker" style="left:${pct}%"></div></div>
+    <div class="thermo-ends"><span>${lang==='es'?'Pesado':'Heavy'}</span><span>${lang==='es'?'Ligero':'Light'}</span></div></div>`;}
 
 /* ===== WIZARD ===== */
 function renderModes(){
@@ -406,7 +421,8 @@ function stepInput(key){
     const q=mode==='morning'?[T.qM,T.qMs]:mode==='evening'?[T.qE,T.qEs]:[T.qI,T.qIs];
     return`<div class="qstn">${q[0]}</div><div class="qsub">${q[1]}</div><div class="breadcrumb" id="crumb">&nbsp;</div>
       <svg class="wheel" id="wheel" viewBox="0 0 720 720" role="img" aria-label="feeling wheel"></svg>
-      <div class="wheelhint">${lang==='es'?'Toca todas las que sientas — quedan marcadas. Toca otra vez para quitar. Punto central = limpiar.':'Tap every one you feel — they stay lit. Tap again to remove. Center dot clears all.'}</div>`;
+      <div class="wheelhint">${lang==='es'?'Toca todas las que sientas — quedan marcadas. Toca otra vez para quitar. Punto central = limpiar.':'Tap every one you feel — they stay lit. Tap again to remove. Center dot clears all.'}</div>
+      <div id="thermo"></div>`;
   }
   const sel=selections.length?`<div class="selected">${selections.map(chipHTML).join('')}</div>`:'';
   if(key==='intensity')return`<div class="qstn">${T.intensity}</div>${sel}<div class="range-wrap"><input type="range" id="rng" min="1" max="10" step="1" value="${draft.intensity}"><span class="range-val" id="rngv">${draft.intensity}</span></div><div class="range-ends"><span>${T.iLow}</span><span>${T.iHigh}</span></div>`;
@@ -440,7 +456,10 @@ function renderWizard(){
   const skip=document.getElementById('skipBtn');if(skip)skip.onclick=()=>{step++;renderWizard();};
   document.getElementById('nextBtn').onclick=async()=>{if(key==='primary'&&!selections.length){toast(T.needfeeling);return;}if(last)await saveCheckin();else{step++;renderWizard();}};
 }
-function setCrumb(){const c=document.getElementById('crumb');if(!c)return;
+function setCrumb(){const c=document.getElementById('crumb');
+  const th=document.getElementById('thermo');
+  if(th)th.innerHTML=selections.length?thermoHTML(moodScore(selections),lang==='es'?'Tu balance ahora':'Your balance right now'):'';
+  if(!c)return;
   if(!selections.length){c.innerHTML=`<span style="color:var(--txt-dim)">${lang==='es'?'Elige una o más':'Pick one or more'}</span>`;return;}
   c.innerHTML=selections.map(chipHTML).join(' ');}
 async function saveCheckin(){
@@ -473,6 +492,8 @@ function renderHistory(){
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   set('stTotal',ck.length);set('stWeek',ck.filter(e=>new Date(e.ts)>=new Date(Date.now()-7*864e5)).length);set('stStreak',streak(ck));
   const counts={};cores.forEach(c=>counts[c]=0);ck.forEach(e=>feelingsOf(e).forEach(f=>{if(counts[f.core]!=null)counts[f.core]++;}));const max=Math.max(1,...Object.values(counts));
+  const allFeels=ck.flatMap(feelingsOf);const ht=document.getElementById('histThermo');
+  if(ht)ht.innerHTML=allFeels.length?thermoHTML(moodScore(allFeels),lang==='es'?'En todos tus registros':'Across all your check-ins'):`<div style="color:var(--txt-dim);font-size:13px">${lang==='es'?'Aún sin datos.':'No data yet.'}</div>`;
   const bars=document.getElementById('bars');if(bars)bars.innerHTML=cores.map(c=>[c,counts[c]]).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<div class="barrow"><div class="nm">${lang==='es'?CORE_ES[c]:c}</div><div class="bartrack"><div class="barfill" style="width:${n/max*100}%;background:${DATA[c].color}"></div></div><div class="ct">${n}</div></div>`).join('');
   const all=[..._all].sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
   if(!all.length){box.innerHTML=`<div class="none">${T.tlnone}</div>`;return;}
@@ -505,7 +526,7 @@ function greeting(){const h=new Date().getHours(),T=UI[lang];return h<12?T.gMorn
 function applyLang(){const T=UI[lang];
   const set=(id,v,html)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
   set('title',T.title);set('greet',greeting());set('langBtn',T.lang);set('tabCheck',T.check);set('tabJournal',T.journal);set('tabHistory',T.history);
-  set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);
+  set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('foot',T.foot,true);
   set('authTitle',T.authTitle);set('authIntro',T.authIntro);set('authEmailL',T.authEmail);set('authPassL',T.authPass);set('loginBtn',T.authBtn);set('signupBtn',T.authSignup);set('authNote',T.authNote);
 }
