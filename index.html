@@ -38,7 +38,9 @@
   .linkbtn{background:none;border:none;color:var(--txt-dim);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:12.5px}
   .linkbtn:hover{color:var(--txt)}
 
-  .tabs{display:flex;gap:20px;margin:18px 0 22px;border-bottom:1px solid var(--line)}
+  .tabs{display:flex;gap:18px;margin:18px 0 22px;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;white-space:nowrap}
   .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt-dim);font-family:'Inter';font-size:14px;font-weight:600;padding:10px 2px;cursor:pointer;transition:.15s}
   .tab.active{color:var(--txt);border-bottom-color:var(--gold)}
   .tab:hover{color:var(--txt)}
@@ -74,6 +76,15 @@
 
   .selected{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--ink-3);border-radius:10px;padding:11px 14px;margin-bottom:16px}
   .schip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--txt)}
+  .fab{position:fixed;right:16px;bottom:18px;z-index:40;background:linear-gradient(135deg,#E8B04B,#E0A458);color:#241B05;border:none;border-radius:999px;padding:14px 19px;font-weight:700;font-size:14px;box-shadow:0 8px 26px -6px rgba(232,176,75,.65);cursor:pointer;display:flex;align-items:center;gap:7px}
+  .fab:active{transform:scale(.97)}
+  .overlay{position:fixed;inset:0;z-index:55;background:linear-gradient(165deg,#141C44 0%,#0A0F1F 70%);overflow-y:auto;padding:26px 20px 48px;display:none}
+  .overlay.show{display:block}
+  .ov-wrap{max-width:600px;margin:0 auto}
+  .ov-close{background:none;border:none;color:var(--txt-soft);font-size:14px;cursor:pointer;margin-bottom:14px;padding:6px 0}
+  .ov-eyebrow{color:var(--gold);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+  .ov-hero{font-family:'Fraunces',serif;font-size:25px;font-weight:500;line-height:1.3;margin:10px 0 24px;color:#F3F1EA}
+  .belief{background:var(--ink-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:13px 16px;margin-bottom:10px;font-size:15px;line-height:1.55;color:#EDEFF8}
   .thermo{margin:16px 0 2px}
   .thermo-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--txt-soft);margin-bottom:7px}
   .thermo-val{font-weight:700;font-size:13px}
@@ -184,6 +195,8 @@
   <nav class="tabs">
     <button class="tab active" data-tab="checkin" id="tabCheck">Check in</button>
     <button class="tab" data-tab="journal" id="tabJournal">Journal</button>
+    <button class="tab" data-tab="connect" id="tabConnect">Connect</button>
+    <button class="tab" data-tab="truths" id="tabTruths">My Worth</button>
     <button class="tab" data-tab="history" id="tabHistory">History</button>
   </nav>
 
@@ -203,6 +216,24 @@
     </div>
     <div class="secl" style="margin:26px 0 14px" id="jPastL">Past entries</div>
     <div id="jList"></div>
+  </section>
+
+  <section id="view-truths" class="hidden">
+    <div id="truthsBody"></div>
+  </section>
+
+  <section id="view-connect" class="hidden">
+    <div class="card" id="connectWizard"></div>
+    <div class="secl" id="topicsTitleL" style="margin:28px 0 12px">Topics to revisit</div>
+    <div class="card">
+      <div class="qsub" id="topicsSubL" style="margin-bottom:14px">Things you've both stepped around.</div>
+      <div class="field"><input type="text" id="topicTitle"></div>
+      <div class="field"><textarea id="topicNote" rows="2"></textarea></div>
+      <div class="nav"><button class="btn primary" id="topicAddBtn">Add topic</button></div>
+    </div>
+    <div id="topicsList" style="margin-top:14px"></div>
+    <div class="secl" id="repairsPastL" style="margin:28px 0 12px">Past talk-throughs</div>
+    <div id="repairsList"></div>
   </section>
 
   <section id="view-history" class="hidden">
@@ -226,6 +257,8 @@
 
   <footer class="foot" id="foot">Saved to your private cloud and synced across your devices. Export backup any time for an extra copy.</footer>
 </div>
+  <button class="fab" id="fab">🛡 <span id="fabL">Save Yourself</span></button>
+  <div class="overlay" id="overlay"><div class="ov-wrap"><button class="ov-close" id="ovClose">✕ <span id="ovCloseL">Close</span></button><div id="ovBody"></div></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -271,7 +304,7 @@ const UI={
    ckTotal:"check-ins",ckWeek:"this week",ckStreak:"day streak",spend:"Where you've been spending time",balance:"Mood balance",
    exportB:"Export backup",importB:"Import backup",timeline:"Timeline",tlnone:"Nothing logged yet. Your first check-in shows up here.",
    foot:"Saved to your private cloud and synced across your devices. Export backup any time for an extra copy.",
-   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…"},
+   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…",connect:"Connect",cTitle:"Talk it through",cSub:"Before you bring it to her, get clear. Most of the fight runs on a guess about what's in her head — and you can't be in there. Separate what you KNOW from what you're GUESSING.",cSituation:"What happened?",cSituationS:"Just the facts — what a camera would see.",cSituationP:"She said… / I walked in and…",cLoop:"Your loop",cLoopS:"What it set off inside you.",cPerceptionL:"What I made it mean",cEmotionL:"What I felt",cResponseL:"What I did, or wanted to do",cUnknown:"Mark the unknown",cUnknownS:"This is the one. Sort what's real from what's a guess.",cKnowL:"What I actually KNOW (she said / did)",cThinkL:"What I THINK is going on for her",cGuessL:"What I'm GUESSING (could be wrong)",cOff:"The off-ramp",cOffS:"A truer move now.",cBetterL:"A better response now",cSayL:"What I'll open with — one sentence",cSaveBtn:"Save talk-through",cSaved:"Talk-through saved",cBack:"Back",cNext:"Next",topicsTitle:"Topics to revisit",topicsSub:"Things you've both stepped around. Name them so you can choose to invest the time together.",topicTitleP:"The topic…",topicNoteP:"Why it's been hard / what you want from it (optional)",topicAddBtn:"Add topic",topicNone:"No topics yet. Add the first one you've been avoiding.",markDone:"Talked about it",reopen:"Revisit again",statusOpen:"to discuss",statusDone:"talked about",repairsPast:"Past talk-throughs",repairsNone:"No talk-throughs yet.",saveSelf:"Save Yourself",close:"Close",ovEyebrow:"Breathe. This is who you are.",ovHero:"Come back to what is true.",ovSetup:"First, set up your truths. Paste them from your Positive Belief Record — they save privately, only for you.",ovNewBeliefL:"My belief about myself (the new, true one)",ovNewBeliefP:"I am a Child of God with infinite value…",ovEvidenceL:"The evidence — one per line",ovEvidenceP:"I am a child of God, because…\nI am not a failure because…",ovSaveBeliefs:"Save my truths",ovEdit:"Edit my truths",ovTriggerL:"What triggered this? (so you learn your patterns)",ovTriggerP:"What just happened / what set it off…",ovGround:"I am grounded — save",ovGrounded:"Saved. You showed up for yourself.",groundedTL:"Grounded",groundedRecent:"Recent grounding moments",truthsTab:"My Worth"},
  es:{title:"Rueda de Emociones",lang:"English",check:"Registro",journal:"Diario",history:"Historial",logout:"Salir",
    authTitle:"Rueda de Emociones",authIntro:"Tu diario privado. Entra con tu correo y contraseña. ¿Primera vez? Toca Crear cuenta.",authEmail:"Correo",authPass:"Contraseña",authBtn:"Entrar",authSignup:"Crear cuenta",authNote:"Solo tú puedes leer lo que escribes aquí. Tus entradas están bloqueadas a tu cuenta.",
    gMorning:"Buenos días, Alex",gAfternoon:"Buenas tardes, Alex",gEvening:"Buenas noches, Alex",
@@ -293,7 +326,7 @@ const UI={
    ckTotal:"registros",ckWeek:"esta semana",ckStreak:"días seguidos",spend:"Dónde has pasado el tiempo",balance:"Balance emocional",
    exportB:"Exportar respaldo",importB:"Importar respaldo",timeline:"Línea de tiempo",tlnone:"Nada registrado aún. Tu primer registro aparecerá aquí.",
    foot:"Guardado en tu nube privada y sincronizado entre tus dispositivos. Exporta un respaldo cuando quieras.",
-   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…"}
+   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor"}
 };
 
 const STEPS={morning:["primary","intensity","morningclose"],evening:["primary","intensity","trigger","selftalk","physical","lessons"],moment:["primary","intensity","trigger","selftalk","physical","lessons"]};
@@ -306,7 +339,13 @@ const CACHE="fw.cache",PEND="fw.pending";
 function blankDraft(){return{intensity:5,trigger:"",selftalk:"",physical:"",lessons:"",carry:"",anchor:""};}
 function defaultMode(){const h=new Date().getHours();return (h>=4&&h<15)?"morning":"evening";}
 function checkins(){return _all.filter(e=>e.type==='checkin');}
-function journals(){return _all.filter(e=>e.type==='journal');}
+function parseBody(e){if(e._pb!==undefined)return e._pb;let v=null;if(e&&e.type==='journal'&&typeof e.body==='string'){try{const o=JSON.parse(e.body);if(o&&o.kind2)v=o;}catch{}}e._pb=v;return v;}
+function isRepair(e){const p=parseBody(e);return!!(p&&p.kind2==='repair');}
+function isTopic(e){const p=parseBody(e);return!!(p&&p.kind2==='topic');}
+function isFreeJournal(e){return e.type==='journal'&&!parseBody(e);}
+function journals(){return _all.filter(isFreeJournal);}
+function repairs(){return _all.filter(isRepair);}
+function topics(){return _all.filter(isTopic);}
 
 /* ===== DATA LAYER (Supabase + offline cache) ===== */
 function cacheKey(){return CACHE+'.'+(currentUser?currentUser.id:'anon');}
@@ -353,7 +392,7 @@ async function removeEntry(id){
   _all=_all.filter(x=>x.id!=id);setCache();
   if(supa&&currentUser&&!String(id).startsWith('local-')){try{await supa.from('entries').delete().eq('id',id);}catch{}}
 }
-function renderActive(){renderStatus();renderJournalList();renderHistory();}
+function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();}
 
 /* ===== WHEEL ===== */
 const CX=360,CY=360,R1=150,R2=250,R3=345,cores=Object.keys(DATA);
@@ -503,9 +542,11 @@ function renderHistory(){
   const allFeels=ck.flatMap(feelingsOf);const ht=document.getElementById('histThermo');
   if(ht)ht.innerHTML=allFeels.length?thermoHTML(moodScore(allFeels),lang==='es'?'En todos tus registros':'Across all your check-ins'):`<div style="color:var(--txt-dim);font-size:13px">${lang==='es'?'Aún sin datos.':'No data yet.'}</div>`;
   const bars=document.getElementById('bars');if(bars)bars.innerHTML=cores.map(c=>[c,counts[c]]).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<div class="barrow"><div class="nm">${lang==='es'?CORE_ES[c]:c}</div><div class="bartrack"><div class="barfill" style="width:${n/max*100}%;background:${DATA[c].color}"></div></div><div class="ct">${n}</div></div>`).join('');
-  const all=[..._all].sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
+  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
   if(!all.length){box.innerHTML=`<div class="none">${T.tlnone}</div>`;return;}
   box.innerHTML=all.map(e=>{const d=new Date(e.ts),dt=`${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
+    if(isGrounding(e)){const p=parseBody(e)||{};return`<div class="entry"><div class="hd"><div class="fl">🛡 ${T.groundedTL}</div><div class="dt">${dt}</div></div>${p.trigger?`<div class="qa"><span>${T.ovTriggerL}</span>${esc(p.trigger)}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;}
+    if(isRepair(e)){const p=parseBody(e);return`<div class="entry"><div class="hd"><div class="fl">💬 ${esc(p.situation||T.cTitle)}</div><div class="dt">${dt}</div></div>${p.say?`<div class="qa"><span>${T.cSayL}</span>${esc(p.say)}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;}
     if(e.type==='journal')return`<div class="entry"><div class="hd"><div class="fl">📓 ${esc(e.title||'—')}</div><div class="dt">${dt}</div></div>${e.body?`<div class="qa">${esc(e.body).replace(/\n/g,'<br>')}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;
     const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
     const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
@@ -528,14 +569,85 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
   document.getElementById('view-checkin').classList.toggle('hidden',tab!=='checkin');
   document.getElementById('view-journal').classList.toggle('hidden',tab!=='journal');
   document.getElementById('view-history').classList.toggle('hidden',tab!=='history');
-  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();});
-document.getElementById('langBtn').onclick=()=>{lang=lang==='en'?'es':'en';localStorage.setItem('fw.lang',lang);applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();};
+  document.getElementById('view-connect').classList.toggle('hidden',tab!=='connect');
+  document.getElementById('view-truths').classList.toggle('hidden',tab!=='truths');
+  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();});
+document.getElementById('langBtn').onclick=()=>{lang=lang==='en'?'es':'en';localStorage.setItem('fw.lang',lang);/* ===== CONNECT (relationship / home) ===== */
+let cStep=0,cDraft=blankC();
+function blankC(){return{situation:'',perception:'',emotion:'',response:'',know:'',think:'',guess:'',better:'',say:''};}
+const CSTEPS=['situation','loop','unknown','offramp'];
+function cStepInput(key){const T=UI[lang];
+  const ta=(id,ph,rows)=>`<textarea id="c_${id}" rows="${rows||3}" placeholder="${ph||''}">${cDraft[id]||''}</textarea>`;
+  if(key==='situation')return`<div class="qstn">${T.cSituation}</div><div class="qsub">${T.cSituationS}</div>${ta('situation',T.cSituationP)}`;
+  if(key==='loop')return`<div class="qstn">${T.cLoop}</div><div class="qsub">${T.cLoopS}</div>
+    <div class="field"><label class="fld">${T.cPerceptionL}</label>${ta('perception','')}</div>
+    <div class="field"><label class="fld">${T.cEmotionL}</label>${ta('emotion','',2)}</div>
+    <div class="field"><label class="fld">${T.cResponseL}</label>${ta('response','',2)}</div>`;
+  if(key==='unknown')return`<div class="qstn">${T.cUnknown}</div><div class="qsub">${T.cUnknownS}</div>
+    <div class="field"><label class="fld">${T.cKnowL}</label>${ta('know','',2)}</div>
+    <div class="field"><label class="fld">${T.cThinkL}</label>${ta('think','',2)}</div>
+    <div class="field"><label class="fld">${T.cGuessL}</label>${ta('guess','',2)}</div>`;
+  if(key==='offramp')return`<div class="qstn">${T.cOff}</div><div class="qsub">${T.cOffS}</div>
+    <div class="field"><label class="fld">${T.cBetterL}</label>${ta('better','',2)}</div>
+    <div class="field"><label class="fld">${T.cSayL}</label>${ta('say','',2)}</div>`;
+  return'';
+}
+function renderConnect(){const T=UI[lang],w=document.getElementById('connectWizard');if(!w)return;
+  const key=CSTEPS[cStep],last=cStep===CSTEPS.length-1;
+  w.innerHTML=`<div style="color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${T.cTitle}</div>
+    <div class="qsub" style="margin:6px 0 14px">${T.cSub}</div>
+    <div class="progress"><span class="steplbl">${T.step} ${cStep+1} ${T.of} ${CSTEPS.length}</span><div class="pbar"><div class="pfill" style="width:${(cStep+1)/CSTEPS.length*100}%"></div></div></div>
+    <div style="margin-top:14px">${cStepInput(key)}</div>
+    <div class="nav">${cStep>0?`<button class="btn ghost" id="cBack">${T.cBack}</button>`:''}<button class="btn primary" id="cNext">${last?T.cSaveBtn:T.cNext}</button></div>`;
+  ['situation','perception','emotion','response','know','think','guess','better','say'].forEach(id=>{const el=document.getElementById('c_'+id);if(el)el.oninput=()=>cDraft[id]=el.value;});
+  const b=document.getElementById('cBack');if(b)b.onclick=()=>{cStep--;renderConnect();};
+  document.getElementById('cNext').onclick=async()=>{if(last)await saveRepair();else{cStep++;renderConnect();}};
+}
+async function saveRepair(){
+  if(!Object.values(cDraft).some(v=>v&&v.trim())){toast(lang==='es'?'Escribe algo primero':'Write something first');return;}
+  await persist({type:'journal',title:(cDraft.situation||'').slice(0,80),body:JSON.stringify(Object.assign({kind2:'repair'},cDraft))});
+  toast(UI[lang].cSaved);cStep=0;cDraft=blankC();renderConnect();renderRepairs();renderHistory();
+}
+function renderRepairs(){const T=UI[lang],a=repairs(),box=document.getElementById('repairsList');if(!box)return;
+  if(!a.length){box.innerHTML=`<div class="none">${T.repairsNone}</div>`;return;}
+  box.innerHTML=a.map(e=>{const p=parseBody(e)||{},d=new Date(e.ts);const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
+    return`<div class="entry"><div class="hd"><div class="fl">💬 ${esc(p.situation||T.cTitle)}</div><div class="dt">${d.toLocaleDateString()}</div></div>
+      ${qa(T.cKnowL,p.know)}${qa(T.cThinkL,p.think)}${qa(T.cGuessL,p.guess)}${qa(T.cBetterL,p.better)}${qa(T.cSayL,p.say)}
+      <button class="del" data-id="${e.id}">delete</button></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderRepairs();renderHistory();});
+}
+function renderTopics(){const T=UI[lang],a=topics().slice(),box=document.getElementById('topicsList');if(!box)return;
+  if(!a.length){box.innerHTML=`<div class="none">${T.topicNone}</div>`;return;}
+  a.sort((x,y)=>{const px=((parseBody(x)||{}).status==='done')?1:0,py=((parseBody(y)||{}).status==='done')?1:0;return px-py||new Date(y.ts)-new Date(x.ts);});
+  box.innerHTML=a.map(e=>{const p=parseBody(e)||{},done=p.status==='done';
+    return`<div class="entry" style="${done?'opacity:.62':''}"><div class="hd"><div class="fl" style="font-size:16px">${done?'✅ ':''}${esc(e.title||'—')}</div>
+      <span class="tag" style="background:${done?'#5fd08a':'var(--txt-soft)'}">${done?T.statusDone:T.statusOpen}</span></div>
+      ${p.note?`<div class="qa">${esc(p.note)}</div>`:''}
+      <div style="display:flex;gap:16px;margin-top:8px"><button class="del" data-act="toggle" data-id="${e.id}">${done?T.reopen:T.markDone}</button><button class="del" data-act="del" data-id="${e.id}">delete</button></div></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{const e=_all.find(x=>x.id==b.dataset.id);if(!e)return;
+    if(b.dataset.act==='del'){await removeEntry(b.dataset.id);}else{const p=parseBody(e)||{kind2:'topic'};p.kind2='topic';p.status=(p.status==='done')?'open':'done';await updateBody(e,p);}
+    renderTopics();});
+}
+async function updateBody(e,obj){const nb=JSON.stringify(obj);e.body=nb;e._pb=undefined;setCache();
+  if(supa&&currentUser&&!String(e.id).startsWith('local-')){try{await supa.from('entries').update({body:nb}).eq('id',e.id);}catch{}}}
+document.getElementById('topicAddBtn').onclick=async()=>{
+  const t=document.getElementById('topicTitle').value.trim(),n=document.getElementById('topicNote').value.trim();
+  if(!t)return;
+  await persist({type:'journal',title:t,body:JSON.stringify({kind2:'topic',note:n,status:'open'})});
+  document.getElementById('topicTitle').value='';document.getElementById('topicNote').value='';
+  toast(UI[lang].cSaved);renderTopics();
+};
+
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();};
 function greeting(){const h=new Date().getHours(),T=UI[lang];return h<12?T.gMorning:h<18?T.gAfternoon:T.gEvening;}
 function applyLang(){const T=UI[lang];
   const set=(id,v,html)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
   set('title',T.title);set('greet',greeting());set('langBtn',T.lang);set('tabCheck',T.check);set('tabJournal',T.journal);set('tabHistory',T.history);
   set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('foot',T.foot,true);
+  set('tabConnect',T.connect);set('topicsTitleL',T.topicsTitle);set('topicsSubL',T.topicsSub);set('repairsPastL',T.repairsPast);
+  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);
+  {const ti=document.getElementById('topicTitle');if(ti)ti.placeholder=T.topicTitleP;const tn=document.getElementById('topicNote');if(tn)tn.placeholder=T.topicNoteP;const ab=document.getElementById('topicAddBtn');if(ab)ab.textContent=T.topicAddBtn;}
   set('authTitle',T.authTitle);set('authIntro',T.authIntro);set('authEmailL',T.authEmail);set('authPassL',T.authPass);set('loginBtn',T.authBtn);set('signupBtn',T.authSignup);set('authNote',T.authNote);
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
@@ -566,7 +678,120 @@ document.getElementById('signupBtn').onclick=async()=>{
 document.getElementById('logoutBtn').onclick=async()=>{await supa.auth.signOut();};
 
 /* ===== INIT ===== */
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();
+/* ===== CONNECT (relationship / home) ===== */
+let cStep=0,cDraft=blankC();
+function blankC(){return{situation:'',perception:'',emotion:'',response:'',know:'',think:'',guess:'',better:'',say:''};}
+const CSTEPS=['situation','loop','unknown','offramp'];
+function cStepInput(key){const T=UI[lang];
+  const ta=(id,ph,rows)=>`<textarea id="c_${id}" rows="${rows||3}" placeholder="${ph||''}">${cDraft[id]||''}</textarea>`;
+  if(key==='situation')return`<div class="qstn">${T.cSituation}</div><div class="qsub">${T.cSituationS}</div>${ta('situation',T.cSituationP)}`;
+  if(key==='loop')return`<div class="qstn">${T.cLoop}</div><div class="qsub">${T.cLoopS}</div>
+    <div class="field"><label class="fld">${T.cPerceptionL}</label>${ta('perception','')}</div>
+    <div class="field"><label class="fld">${T.cEmotionL}</label>${ta('emotion','',2)}</div>
+    <div class="field"><label class="fld">${T.cResponseL}</label>${ta('response','',2)}</div>`;
+  if(key==='unknown')return`<div class="qstn">${T.cUnknown}</div><div class="qsub">${T.cUnknownS}</div>
+    <div class="field"><label class="fld">${T.cKnowL}</label>${ta('know','',2)}</div>
+    <div class="field"><label class="fld">${T.cThinkL}</label>${ta('think','',2)}</div>
+    <div class="field"><label class="fld">${T.cGuessL}</label>${ta('guess','',2)}</div>`;
+  if(key==='offramp')return`<div class="qstn">${T.cOff}</div><div class="qsub">${T.cOffS}</div>
+    <div class="field"><label class="fld">${T.cBetterL}</label>${ta('better','',2)}</div>
+    <div class="field"><label class="fld">${T.cSayL}</label>${ta('say','',2)}</div>`;
+  return'';
+}
+function renderConnect(){const T=UI[lang],w=document.getElementById('connectWizard');if(!w)return;
+  const key=CSTEPS[cStep],last=cStep===CSTEPS.length-1;
+  w.innerHTML=`<div style="color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${T.cTitle}</div>
+    <div class="qsub" style="margin:6px 0 14px">${T.cSub}</div>
+    <div class="progress"><span class="steplbl">${T.step} ${cStep+1} ${T.of} ${CSTEPS.length}</span><div class="pbar"><div class="pfill" style="width:${(cStep+1)/CSTEPS.length*100}%"></div></div></div>
+    <div style="margin-top:14px">${cStepInput(key)}</div>
+    <div class="nav">${cStep>0?`<button class="btn ghost" id="cBack">${T.cBack}</button>`:''}<button class="btn primary" id="cNext">${last?T.cSaveBtn:T.cNext}</button></div>`;
+  ['situation','perception','emotion','response','know','think','guess','better','say'].forEach(id=>{const el=document.getElementById('c_'+id);if(el)el.oninput=()=>cDraft[id]=el.value;});
+  const b=document.getElementById('cBack');if(b)b.onclick=()=>{cStep--;renderConnect();};
+  document.getElementById('cNext').onclick=async()=>{if(last)await saveRepair();else{cStep++;renderConnect();}};
+}
+async function saveRepair(){
+  if(!Object.values(cDraft).some(v=>v&&v.trim())){toast(lang==='es'?'Escribe algo primero':'Write something first');return;}
+  await persist({type:'journal',title:(cDraft.situation||'').slice(0,80),body:JSON.stringify(Object.assign({kind2:'repair'},cDraft))});
+  toast(UI[lang].cSaved);cStep=0;cDraft=blankC();renderConnect();renderRepairs();renderHistory();
+}
+function renderRepairs(){const T=UI[lang],a=repairs(),box=document.getElementById('repairsList');if(!box)return;
+  if(!a.length){box.innerHTML=`<div class="none">${T.repairsNone}</div>`;return;}
+  box.innerHTML=a.map(e=>{const p=parseBody(e)||{},d=new Date(e.ts);const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
+    return`<div class="entry"><div class="hd"><div class="fl">💬 ${esc(p.situation||T.cTitle)}</div><div class="dt">${d.toLocaleDateString()}</div></div>
+      ${qa(T.cKnowL,p.know)}${qa(T.cThinkL,p.think)}${qa(T.cGuessL,p.guess)}${qa(T.cBetterL,p.better)}${qa(T.cSayL,p.say)}
+      <button class="del" data-id="${e.id}">delete</button></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderRepairs();renderHistory();});
+}
+function renderTopics(){const T=UI[lang],a=topics().slice(),box=document.getElementById('topicsList');if(!box)return;
+  if(!a.length){box.innerHTML=`<div class="none">${T.topicNone}</div>`;return;}
+  a.sort((x,y)=>{const px=((parseBody(x)||{}).status==='done')?1:0,py=((parseBody(y)||{}).status==='done')?1:0;return px-py||new Date(y.ts)-new Date(x.ts);});
+  box.innerHTML=a.map(e=>{const p=parseBody(e)||{},done=p.status==='done';
+    return`<div class="entry" style="${done?'opacity:.62':''}"><div class="hd"><div class="fl" style="font-size:16px">${done?'✅ ':''}${esc(e.title||'—')}</div>
+      <span class="tag" style="background:${done?'#5fd08a':'var(--txt-soft)'}">${done?T.statusDone:T.statusOpen}</span></div>
+      ${p.note?`<div class="qa">${esc(p.note)}</div>`:''}
+      <div style="display:flex;gap:16px;margin-top:8px"><button class="del" data-act="toggle" data-id="${e.id}">${done?T.reopen:T.markDone}</button><button class="del" data-act="del" data-id="${e.id}">delete</button></div></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{const e=_all.find(x=>x.id==b.dataset.id);if(!e)return;
+    if(b.dataset.act==='del'){await removeEntry(b.dataset.id);}else{const p=parseBody(e)||{kind2:'topic'};p.kind2='topic';p.status=(p.status==='done')?'open':'done';await updateBody(e,p);}
+    renderTopics();});
+}
+async function updateBody(e,obj){const nb=JSON.stringify(obj);e.body=nb;e._pb=undefined;setCache();
+  if(supa&&currentUser&&!String(e.id).startsWith('local-')){try{await supa.from('entries').update({body:nb}).eq('id',e.id);}catch{}}}
+document.getElementById('topicAddBtn').onclick=async()=>{
+  const t=document.getElementById('topicTitle').value.trim(),n=document.getElementById('topicNote').value.trim();
+  if(!t)return;
+  await persist({type:'journal',title:t,body:JSON.stringify({kind2:'topic',note:n,status:'open'})});
+  document.getElementById('topicTitle').value='';document.getElementById('topicNote').value='';
+  toast(UI[lang].cSaved);renderTopics();
+};
+
+/* ===== SAVE YOURSELF / MY TRUTHS ===== */
+function isBeliefs(e){const p=parseBody(e);return!!(p&&p.kind2==='beliefs');}
+function isGrounding(e){const p=parseBody(e);return!!(p&&p.kind2==='grounding');}
+function beliefsEntry(){return _all.find(isBeliefs);}
+function groundings(){return _all.filter(isGrounding).sort((a,b)=>new Date(b.ts)-new Date(a.ts));}
+async function saveBeliefsValues(nb,ev){const obj={kind2:'beliefs',newBelief:nb,evidence:ev},be=beliefsEntry();if(be){await updateBody(be,obj);}else{await persist({type:'journal',title:'My truths',body:JSON.stringify(obj)});}}
+async function logGroundingValue(t){await persist({type:'journal',title:'Grounded',body:JSON.stringify({kind2:'grounding',trigger:t})});}
+function editorHTML(p,idp){const T=UI[lang];return `<div class="qsub" style="margin-bottom:16px">${T.ovSetup}</div>
+  <div class="field"><label class="fld">${T.ovNewBeliefL}</label><textarea id="${idp}New" rows="3" placeholder="${T.ovNewBeliefP}">${esc(p.newBelief||'')}</textarea></div>
+  <div class="field"><label class="fld">${T.ovEvidenceL}</label><textarea id="${idp}Ev" rows="11" placeholder="${T.ovEvidenceP}">${esc((p.evidence||[]).join('\n'))}</textarea></div>
+  <div class="nav"><button class="btn primary" id="${idp}Save">${T.ovSaveBeliefs}</button></div>`;}
+function beliefsViewHTML(p){const T=UI[lang];return `<div class="ov-eyebrow">${T.ovEyebrow}</div><div class="ov-hero">${esc(p.newBelief||T.ovHero)}</div>${(p.evidence||[]).map(l=>`<div class="belief">${esc(l)}</div>`).join('')}`;}
+
+/* ---- overlay (FAB, immersive) ---- */
+let ovEdit=false;
+function openOverlay(){ovEdit=false;renderOverlay();document.getElementById('overlay').classList.add('show');document.body.style.overflow='hidden';}
+function closeOverlay(){document.getElementById('overlay').classList.remove('show');document.body.style.overflow='';}
+function renderOverlay(){const T=UI[lang],be=beliefsEntry(),body=document.getElementById('ovBody');
+  if(!be||ovEdit){const p=be?parseBody(be):{};
+    body.innerHTML=`<div class="ov-eyebrow">${T.saveSelf}</div><div class="ov-hero">${T.ovHero}</div>`+editorHTML(p,'o');
+    document.getElementById('oSave').onclick=async()=>{const nb=document.getElementById('oNew').value.trim();const ev=document.getElementById('oEv').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!nb&&!ev.length){toast(lang==='es'?'Escribe tus verdades primero':'Write your truths first');return;}await saveBeliefsValues(nb,ev);ovEdit=false;renderOverlay();renderTruths();toast(lang==='es'?'Guardado':'Saved');};return;}
+  const p=parseBody(be)||{};
+  body.innerHTML=beliefsViewHTML(p)+`<div class="field" style="margin-top:26px"><label class="fld">${T.ovTriggerL}</label><textarea id="ovTrigger" rows="2" placeholder="${T.ovTriggerP}"></textarea></div>
+    <div class="nav"><button class="btn primary" id="ovGround">${T.ovGround}</button></div>
+    <div style="text-align:center;margin-top:14px"><button class="skip" id="ovEditBtn">${T.ovEdit}</button></div>`;
+  document.getElementById('ovGround').onclick=async()=>{await logGroundingValue(document.getElementById('ovTrigger').value.trim());toast(T.ovGrounded);closeOverlay();renderHistory();renderTruths();};
+  document.getElementById('ovEditBtn').onclick=()=>{ovEdit=true;renderOverlay();};
+}
+/* ---- tab (organized home) ---- */
+let tEdit=false;
+function renderTruths(){const T=UI[lang],be=beliefsEntry(),box=document.getElementById('truthsBody');if(!box)return;
+  if(!be||tEdit){const p=be?parseBody(be):{};
+    box.innerHTML=`<div class="card"><div class="ov-eyebrow">${T.saveSelf}</div><div class="ov-hero" style="font-size:22px;margin:8px 0 18px">${T.ovHero}</div>`+editorHTML(p,'t')+`</div>`;
+    document.getElementById('tSave').onclick=async()=>{const nb=document.getElementById('tNew').value.trim();const ev=document.getElementById('tEv').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!nb&&!ev.length){toast(lang==='es'?'Escribe tus verdades primero':'Write your truths first');return;}await saveBeliefsValues(nb,ev);tEdit=false;renderTruths();renderOverlay();toast(lang==='es'?'Guardado':'Saved');};return;}
+  const p=parseBody(be)||{},gs=groundings().slice(0,6);
+  box.innerHTML=`<div class="card">`+beliefsViewHTML(p).replace('ov-hero">','ov-hero" style="font-size:22px;margin:8px 0 18px">')+`
+      <div class="field" style="margin-top:24px"><label class="fld">${T.ovTriggerL}</label><textarea id="tTrigger" rows="2" placeholder="${T.ovTriggerP}"></textarea></div>
+      <div class="nav"><button class="btn primary" id="tGround">${T.ovGround}</button></div>
+      <div style="text-align:center;margin-top:12px"><button class="skip" id="tEditBtn">${T.ovEdit}</button></div>
+    </div>
+    ${gs.length?`<div class="secl" style="margin:26px 0 12px">${T.groundedRecent}</div>`+gs.map(e=>{const pp=parseBody(e)||{},d=new Date(e.ts);return `<div class="entry"><div class="hd"><div class="fl">🛡 ${T.groundedTL}</div><div class="dt">${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>${pp.trigger?`<div class="qa">${esc(pp.trigger)}</div>`:''}</div>`;}).join(''):''}`;
+  document.getElementById('tGround').onclick=async()=>{await logGroundingValue(document.getElementById('tTrigger').value.trim());toast(T.ovGrounded);renderTruths();renderHistory();};
+  document.getElementById('tEditBtn').onclick=()=>{tEdit=true;renderTruths();};
+}
+document.getElementById('fab').onclick=openOverlay;
+document.getElementById('ovClose').onclick=closeOverlay;
+
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();
 if(window.supabase&&window.supabase.createClient){
   supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   supa.auth.getSession().then(({data})=>handleSession(data.session));
