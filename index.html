@@ -76,6 +76,8 @@
 
   .selected{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--ink-3);border-radius:10px;padding:11px 14px;margin-bottom:16px}
   .schip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--txt)}
+  .dayhdr{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin:22px 2px 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .dayhdr:first-child{margin-top:4px}
   .fab{position:fixed;right:16px;bottom:18px;z-index:40;background:linear-gradient(135deg,#E8B04B,#E0A458);color:#241B05;border:none;border-radius:999px;padding:14px 19px;font-weight:700;font-size:14px;box-shadow:0 8px 26px -6px rgba(232,176,75,.65);cursor:pointer;display:flex;align-items:center;gap:7px}
   .fab:active{transform:scale(.97)}
   .overlay{position:fixed;inset:0;z-index:55;background:linear-gradient(165deg,#141C44 0%,#0A0F1F 70%);overflow-y:auto;padding:26px 20px 48px;display:none}
@@ -194,6 +196,7 @@
 
   <nav class="tabs">
     <button class="tab active" data-tab="checkin" id="tabCheck">Check in</button>
+    <button class="tab" data-tab="prio" id="tabPrio">Priorities</button>
     <button class="tab" data-tab="journal" id="tabJournal">Journal</button>
     <button class="tab" data-tab="connect" id="tabConnect">Connect</button>
     <button class="tab" data-tab="truths" id="tabTruths">My Worth</button>
@@ -216,6 +219,23 @@
     </div>
     <div class="secl" style="margin:26px 0 14px" id="jPastL">Past entries</div>
     <div id="jList"></div>
+  </section>
+
+  <section id="view-prio" class="hidden">
+    <div class="card">
+      <div style="color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700" id="prioTitleL">Priority checklist</div>
+      <div class="qsub" id="prioSubL" style="margin:6px 0 16px">…</div>
+      <div class="field"><input type="text" id="prioTitle"></div>
+      <div class="field"><textarea id="prioNote" rows="2"></textarea></div>
+      <div class="modes" id="prioBtns" style="margin-bottom:14px">
+        <button class="mode active" data-prio="high">High</button>
+        <button class="mode" data-prio="med">Medium</button>
+        <button class="mode" data-prio="low">Low</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:9px;font-size:14px;color:var(--txt-soft);margin-bottom:6px"><input type="checkbox" id="prioSheAsked" style="width:18px;height:18px"> <span id="sheAskedL">She asked for this</span></label>
+      <div class="nav"><button class="btn primary" id="prioAddBtn">Add to list</button></div>
+    </div>
+    <div id="prioList" style="margin-top:16px"></div>
   </section>
 
   <section id="view-truths" class="hidden">
@@ -304,7 +324,7 @@ const UI={
    ckTotal:"check-ins",ckWeek:"this week",ckStreak:"day streak",spend:"Where you've been spending time",balance:"Mood balance",
    exportB:"Export backup",importB:"Import backup",timeline:"Timeline",tlnone:"Nothing logged yet. Your first check-in shows up here.",
    foot:"Saved to your private cloud and synced across your devices. Export backup any time for an extra copy.",
-   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…",connect:"Connect",cTitle:"Talk it through",cSub:"Before you bring it to her, get clear. Most of the fight runs on a guess about what's in her head — and you can't be in there. Separate what you KNOW from what you're GUESSING.",cSituation:"What happened?",cSituationS:"Just the facts — what a camera would see.",cSituationP:"She said… / I walked in and…",cLoop:"Your loop",cLoopS:"What it set off inside you.",cPerceptionL:"What I made it mean",cEmotionL:"What I felt",cResponseL:"What I did, or wanted to do",cUnknown:"Mark the unknown",cUnknownS:"This is the one. Sort what's real from what's a guess.",cKnowL:"What I actually KNOW (she said / did)",cThinkL:"What I THINK is going on for her",cGuessL:"What I'm GUESSING (could be wrong)",cOff:"The off-ramp",cOffS:"A truer move now.",cBetterL:"A better response now",cSayL:"What I'll open with — one sentence",cSaveBtn:"Save talk-through",cSaved:"Talk-through saved",cBack:"Back",cNext:"Next",topicsTitle:"Topics to revisit",topicsSub:"Things you've both stepped around. Name them so you can choose to invest the time together.",topicTitleP:"The topic…",topicNoteP:"Why it's been hard / what you want from it (optional)",topicAddBtn:"Add topic",topicNone:"No topics yet. Add the first one you've been avoiding.",markDone:"Talked about it",reopen:"Revisit again",statusOpen:"to discuss",statusDone:"talked about",repairsPast:"Past talk-throughs",repairsNone:"No talk-throughs yet.",saveSelf:"Save Yourself",close:"Close",ovEyebrow:"Breathe. This is who you are.",ovHero:"Come back to what is true.",ovSetup:"First, set up your truths. Paste them from your Positive Belief Record — they save privately, only for you.",ovNewBeliefL:"My belief about myself (the new, true one)",ovNewBeliefP:"I am a Child of God with infinite value…",ovEvidenceL:"The evidence — one per line",ovEvidenceP:"I am a child of God, because…\nI am not a failure because…",ovSaveBeliefs:"Save my truths",ovEdit:"Edit my truths",ovTriggerL:"What triggered this? (so you learn your patterns)",ovTriggerP:"What just happened / what set it off…",ovGround:"I am grounded — save",ovGrounded:"Saved. You showed up for yourself.",groundedTL:"Grounded",groundedRecent:"Recent grounding moments",truthsTab:"My Worth"},
+   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…",connect:"Connect",cTitle:"Talk it through",cSub:"Before you bring it to her, get clear. Most of the fight runs on a guess about what's in her head — and you can't be in there. Separate what you KNOW from what you're GUESSING.",cSituation:"What happened?",cSituationS:"Just the facts — what a camera would see.",cSituationP:"She said… / I walked in and…",cLoop:"Your loop",cLoopS:"What it set off inside you.",cPerceptionL:"What I made it mean",cEmotionL:"What I felt",cResponseL:"What I did, or wanted to do",cUnknown:"Mark the unknown",cUnknownS:"This is the one. Sort what's real from what's a guess.",cKnowL:"What I actually KNOW (she said / did)",cThinkL:"What I THINK is going on for her",cGuessL:"What I'm GUESSING (could be wrong)",cOff:"The off-ramp",cOffS:"A truer move now.",cBetterL:"A better response now",cSayL:"What I'll open with — one sentence",cSaveBtn:"Save talk-through",cSaved:"Talk-through saved",cBack:"Back",cNext:"Next",topicsTitle:"Topics to revisit",topicsSub:"Things you've both stepped around. Name them so you can choose to invest the time together.",topicTitleP:"The topic…",topicNoteP:"Why it's been hard / what you want from it (optional)",topicAddBtn:"Add topic",topicNone:"No topics yet. Add the first one you've been avoiding.",markDone:"Talked about it",reopen:"Revisit again",statusOpen:"to discuss",statusDone:"talked about",repairsPast:"Past talk-throughs",repairsNone:"No talk-throughs yet.",saveSelf:"Save Yourself",close:"Close",ovEyebrow:"Breathe. This is who you are.",ovHero:"Come back to what is true.",ovSetup:"First, set up your truths. Paste them from your Positive Belief Record — they save privately, only for you.",ovNewBeliefL:"My belief about myself (the new, true one)",ovNewBeliefP:"I am a Child of God with infinite value…",ovEvidenceL:"The evidence — one per line",ovEvidenceP:"I am a child of God, because…\nI am not a failure because…",ovSaveBeliefs:"Save my truths",ovEdit:"Edit my truths",ovTriggerL:"What triggered this? (so you learn your patterns)",ovTriggerP:"What just happened / what set it off…",ovGround:"I am grounded — save",ovGrounded:"Saved. You showed up for yourself.",groundedTL:"Grounded",groundedRecent:"Recent grounding moments",truthsTab:"My Worth",groundedTruthsL:"The truths I came back to",prioTab:"Priorities",prioTitle:"Priority checklist",prioSub:"The things that have been asked of you — and the ones you keep meaning to do. Put them here, rank them, knock them out. Following through is how trust gets rebuilt.",prioTaskP:"The task / chore…",prioNoteP:"Any detail (optional)…",prioAddBtn:"Add to list",prioNone:"Nothing on the list yet. Add the first thing you've been putting off.",prioHigh:"High",prioMed:"Medium",prioLow:"Low",sheAsked:"She asked for this",prioDone:"Mark done",prioReopen:"Not done",prioOpenL:"still to do"},
  es:{title:"Rueda de Emociones",lang:"English",check:"Registro",journal:"Diario",history:"Historial",logout:"Salir",
    authTitle:"Rueda de Emociones",authIntro:"Tu diario privado. Entra con tu correo y contraseña. ¿Primera vez? Toca Crear cuenta.",authEmail:"Correo",authPass:"Contraseña",authBtn:"Entrar",authSignup:"Crear cuenta",authNote:"Solo tú puedes leer lo que escribes aquí. Tus entradas están bloqueadas a tu cuenta.",
    gMorning:"Buenos días, Alex",gAfternoon:"Buenas tardes, Alex",gEvening:"Buenas noches, Alex",
@@ -326,7 +346,7 @@ const UI={
    ckTotal:"registros",ckWeek:"esta semana",ckStreak:"días seguidos",spend:"Dónde has pasado el tiempo",balance:"Balance emocional",
    exportB:"Exportar respaldo",importB:"Importar respaldo",timeline:"Línea de tiempo",tlnone:"Nada registrado aún. Tu primer registro aparecerá aquí.",
    foot:"Guardado en tu nube privada y sincronizado entre tus dispositivos. Exporta un respaldo cuando quieras.",
-   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor"}
+   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor",groundedTruthsL:"Las verdades a las que volví",prioTab:"Prioridades",prioTitle:"Lista de prioridades",prioSub:"Las cosas que te han pedido — y las que sigues posponiendo. Ponlas aquí, ordénalas, complétalas. Cumplir es como se reconstruye la confianza.",prioTaskP:"La tarea / pendiente…",prioNoteP:"Algún detalle (opcional)…",prioAddBtn:"Agregar a la lista",prioNone:"Nada en la lista aún. Agrega lo primero que has estado posponiendo.",prioHigh:"Alta",prioMed:"Media",prioLow:"Baja",sheAsked:"Ella lo pidió",prioDone:"Marcar hecho",prioReopen:"Sin hacer",prioOpenL:"por hacer"}
 };
 
 const STEPS={morning:["primary","intensity","morningclose"],evening:["primary","intensity","trigger","selftalk","physical","lessons"],moment:["primary","intensity","trigger","selftalk","physical","lessons"]};
@@ -392,7 +412,7 @@ async function removeEntry(id){
   _all=_all.filter(x=>x.id!=id);setCache();
   if(supa&&currentUser&&!String(id).startsWith('local-')){try{await supa.from('entries').delete().eq('id',id);}catch{}}
 }
-function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();}
+function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();}
 
 /* ===== WHEEL ===== */
 const CX=360,CY=360,R1=150,R2=250,R3=345,cores=Object.keys(DATA);
@@ -534,6 +554,18 @@ function renderJournalList(){
   box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderJournalList();renderHistory();});}
 
 /* ===== HISTORY ===== */
+function dayLabel(ts){const a=new Date(ts);a.setHours(0,0,0,0);const t=new Date();t.setHours(0,0,0,0);const diff=Math.round((t-a)/86400000);
+  if(diff===0)return lang==='es'?'Hoy':'Today';
+  if(diff===1)return lang==='es'?'Ayer':'Yesterday';
+  return a.toLocaleDateString(lang==='es'?'es-ES':'en-US',{weekday:'long',month:'long',day:'numeric'});}
+function entryCardHTML(e,T){const d=new Date(e.ts),dt=`${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
+  if(isGrounding(e)){const p=parseBody(e)||{},cur=parseBody(beliefsEntry())||{};const nb=p.newBelief||cur.newBelief||'';const ev=(p.evidence&&p.evidence.length)?p.evidence:(cur.evidence||[]);
+    return`<div class="entry"><div class="hd"><div class="fl">🛡 ${T.groundedTL}</div><div class="dt">${dt}</div></div>${p.trigger?`<div class="qa"><span>${T.ovTriggerL}</span>${esc(p.trigger)}</div>`:''}${nb?`<div class="qa"><span>${T.groundedTruthsL}</span><b>${esc(nb)}</b></div>`:''}${ev.length?ev.map(l=>`<div class="belief" style="margin-top:8px">${esc(l)}</div>`).join(''):''}<button class="del" data-id="${e.id}">delete</button></div>`;}
+  if(isRepair(e)){const p=parseBody(e);return`<div class="entry"><div class="hd"><div class="fl">💬 ${esc(p.situation||T.cTitle)}</div><div class="dt">${dt}</div></div>${p.say?`<div class="qa"><span>${T.cSayL}</span>${esc(p.say)}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;}
+  if(e.type==='journal')return`<div class="entry"><div class="hd"><div class="fl">📓 ${esc(e.title||'—')}</div><div class="dt">${dt}</div></div>${e.body?`<div class="qa">${esc(e.body).replace(/\n/g,'<br>')}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;
+  const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
+  const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
+  return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}<button class="del" data-id="${e.id}">delete</button></div>`;}
 function renderHistory(){
   const T=UI[lang],ck=checkins();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -542,15 +574,11 @@ function renderHistory(){
   const allFeels=ck.flatMap(feelingsOf);const ht=document.getElementById('histThermo');
   if(ht)ht.innerHTML=allFeels.length?thermoHTML(moodScore(allFeels),lang==='es'?'En todos tus registros':'Across all your check-ins'):`<div style="color:var(--txt-dim);font-size:13px">${lang==='es'?'Aún sin datos.':'No data yet.'}</div>`;
   const bars=document.getElementById('bars');if(bars)bars.innerHTML=cores.map(c=>[c,counts[c]]).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<div class="barrow"><div class="nm">${lang==='es'?CORE_ES[c]:c}</div><div class="bartrack"><div class="barfill" style="width:${n/max*100}%;background:${DATA[c].color}"></div></div><div class="ct">${n}</div></div>`).join('');
-  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
+  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)&&!isPriority(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
   if(!all.length){box.innerHTML=`<div class="none">${T.tlnone}</div>`;return;}
-  box.innerHTML=all.map(e=>{const d=new Date(e.ts),dt=`${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
-    if(isGrounding(e)){const p=parseBody(e)||{};return`<div class="entry"><div class="hd"><div class="fl">🛡 ${T.groundedTL}</div><div class="dt">${dt}</div></div>${p.trigger?`<div class="qa"><span>${T.ovTriggerL}</span>${esc(p.trigger)}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;}
-    if(isRepair(e)){const p=parseBody(e);return`<div class="entry"><div class="hd"><div class="fl">💬 ${esc(p.situation||T.cTitle)}</div><div class="dt">${dt}</div></div>${p.say?`<div class="qa"><span>${T.cSayL}</span>${esc(p.say)}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;}
-    if(e.type==='journal')return`<div class="entry"><div class="hd"><div class="fl">📓 ${esc(e.title||'—')}</div><div class="dt">${dt}</div></div>${e.body?`<div class="qa">${esc(e.body).replace(/\n/g,'<br>')}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;
-    const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
-    const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
-    return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}<button class="del" data-id="${e.id}">delete</button></div>`;}).join('');
+  let html='',lastDay='';
+  all.forEach(e=>{const dk=new Date(e.ts).toDateString();if(dk!==lastDay){lastDay=dk;html+=`<div class="dayhdr">${dayLabel(e.ts)}</div>`;}html+=entryCardHTML(e,T);});
+  box.innerHTML=html;
   box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderHistory();renderJournalList();renderStatus();});}
 function streak(a){if(!a.length)return 0;const days=new Set(a.map(e=>new Date(e.ts).toDateString()));let s=0,d=new Date();while(days.has(d.toDateString())){s++;d.setDate(d.getDate()-1);}if(s===0){d=new Date();d.setDate(d.getDate()-1);while(days.has(d.toDateString())){s++;d.setDate(d.getDate()-1);}}return s;}
 function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -571,7 +599,8 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
   document.getElementById('view-history').classList.toggle('hidden',tab!=='history');
   document.getElementById('view-connect').classList.toggle('hidden',tab!=='connect');
   document.getElementById('view-truths').classList.toggle('hidden',tab!=='truths');
-  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();});
+  document.getElementById('view-prio').classList.toggle('hidden',tab!=='prio');
+  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();});
 document.getElementById('langBtn').onclick=()=>{lang=lang==='en'?'es':'en';localStorage.setItem('fw.lang',lang);/* ===== CONNECT (relationship / home) ===== */
 let cStep=0,cDraft=blankC();
 function blankC(){return{situation:'',perception:'',emotion:'',response:'',know:'',think:'',guess:'',better:'',say:''};}
@@ -638,7 +667,7 @@ document.getElementById('topicAddBtn').onclick=async()=>{
   toast(UI[lang].cSaved);renderTopics();
 };
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();};
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();};
 function greeting(){const h=new Date().getHours(),T=UI[lang];return h<12?T.gMorning:h<18?T.gAfternoon:T.gEvening;}
 function applyLang(){const T=UI[lang];
   const set=(id,v,html)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
@@ -646,7 +675,10 @@ function applyLang(){const T=UI[lang];
   set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('foot',T.foot,true);
   set('tabConnect',T.connect);set('topicsTitleL',T.topicsTitle);set('topicsSubL',T.topicsSub);set('repairsPastL',T.repairsPast);
-  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);
+  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);
+  set('prioTitleL',T.prioTitle);set('prioSubL',T.prioSub);set('sheAskedL',T.sheAsked);
+  {const pt=document.getElementById('prioTitle');if(pt)pt.placeholder=T.prioTaskP;const pn=document.getElementById('prioNote');if(pn)pn.placeholder=T.prioNoteP;const pa=document.getElementById('prioAddBtn');if(pa)pa.textContent=T.prioAddBtn;
+   const pb=document.getElementById('prioBtns');if(pb){const m=pb.querySelectorAll('.mode');if(m[0])m[0].textContent=T.prioHigh;if(m[1])m[1].textContent=T.prioMed;if(m[2])m[2].textContent=T.prioLow;}}
   {const ti=document.getElementById('topicTitle');if(ti)ti.placeholder=T.topicTitleP;const tn=document.getElementById('topicNote');if(tn)tn.placeholder=T.topicNoteP;const ab=document.getElementById('topicAddBtn');if(ab)ab.textContent=T.topicAddBtn;}
   set('authTitle',T.authTitle);set('authIntro',T.authIntro);set('authEmailL',T.authEmail);set('authPassL',T.authPass);set('loginBtn',T.authBtn);set('signupBtn',T.authSignup);set('authNote',T.authNote);
 }
@@ -750,7 +782,7 @@ function isGrounding(e){const p=parseBody(e);return!!(p&&p.kind2==='grounding');
 function beliefsEntry(){return _all.find(isBeliefs);}
 function groundings(){return _all.filter(isGrounding).sort((a,b)=>new Date(b.ts)-new Date(a.ts));}
 async function saveBeliefsValues(nb,ev){const obj={kind2:'beliefs',newBelief:nb,evidence:ev},be=beliefsEntry();if(be){await updateBody(be,obj);}else{await persist({type:'journal',title:'My truths',body:JSON.stringify(obj)});}}
-async function logGroundingValue(t){await persist({type:'journal',title:'Grounded',body:JSON.stringify({kind2:'grounding',trigger:t})});}
+async function logGroundingValue(t){const be=beliefsEntry(),p=be?(parseBody(be)||{}):{};await persist({type:'journal',title:'Grounded',body:JSON.stringify({kind2:'grounding',trigger:t,newBelief:p.newBelief||'',evidence:p.evidence||[]})});}
 function editorHTML(p,idp){const T=UI[lang];return `<div class="qsub" style="margin-bottom:16px">${T.ovSetup}</div>
   <div class="field"><label class="fld">${T.ovNewBeliefL}</label><textarea id="${idp}New" rows="3" placeholder="${T.ovNewBeliefP}">${esc(p.newBelief||'')}</textarea></div>
   <div class="field"><label class="fld">${T.ovEvidenceL}</label><textarea id="${idp}Ev" rows="11" placeholder="${T.ovEvidenceP}">${esc((p.evidence||[]).join('\n'))}</textarea></div>
@@ -791,7 +823,37 @@ function renderTruths(){const T=UI[lang],be=beliefsEntry(),box=document.getEleme
 document.getElementById('fab').onclick=openOverlay;
 document.getElementById('ovClose').onclick=closeOverlay;
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();
+/* ===== PRIORITIES (chores / follow-through) ===== */
+function isPriority(e){const p=parseBody(e);return!!(p&&p.kind2==='priority');}
+function priorities(){return _all.filter(isPriority);}
+let prioSel='high';
+(function(){const pb=document.getElementById('prioBtns');if(pb)pb.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{prioSel=b.dataset.prio;pb.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');});})();
+const PRIO_COL={high:'#C8694E',med:'#E8B04B',low:'#6B7A99'};
+function prioLabel(k){const T=UI[lang];return k==='high'?T.prioHigh:k==='low'?T.prioLow:T.prioMed;}
+function renderPriorities(){const T=UI[lang],a=priorities().slice(),box=document.getElementById('prioList');if(!box)return;
+  if(!a.length){box.innerHTML=`<div class="none">${T.prioNone}</div>`;return;}
+  const ord={high:0,med:1,low:2};
+  a.sort((x,y)=>{const px=parseBody(x)||{},py=parseBody(y)||{};const dx=px.done?1:0,dy=py.done?1:0;return dx-dy||((ord[px.prio]??1)-(ord[py.prio]??1))||new Date(y.ts)-new Date(x.ts);});
+  const open=a.filter(e=>!(parseBody(e)||{}).done).length;
+  box.innerHTML=`<div class="secl" style="margin:4px 2px 12px">${open} ${T.prioOpenL}</div>`+a.map(e=>{const p=parseBody(e)||{},done=!!p.done,col=PRIO_COL[p.prio]||PRIO_COL.med,tc=(p.prio==='med')?'#241B05':'#fff';
+    return`<div class="entry" style="${done?'opacity:.55':''}"><div class="hd"><div class="fl" style="font-size:16px">${done?'✅ ':''}${esc(e.title||'—')}</div>
+      <span class="tag" style="background:${col};color:${tc}">${prioLabel(p.prio||'med')}</span></div>
+      ${p.sheAsked?`<div style="color:var(--gold);font-size:12.5px;margin-top:4px">💛 ${T.sheAsked}</div>`:''}
+      ${p.note?`<div class="qa">${esc(p.note)}</div>`:''}
+      <div style="display:flex;gap:16px;margin-top:8px"><button class="del" data-act="toggle" data-id="${e.id}">${done?T.prioReopen:T.prioDone}</button><button class="del" data-act="del" data-id="${e.id}">delete</button></div></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{const e=_all.find(x=>x.id==b.dataset.id);if(!e)return;
+    if(b.dataset.act==='del'){await removeEntry(b.dataset.id);}else{const p=parseBody(e)||{kind2:'priority'};p.kind2='priority';p.done=!p.done;await updateBody(e,p);}
+    renderPriorities();});
+}
+document.getElementById('prioAddBtn').onclick=async()=>{
+  const t=document.getElementById('prioTitle').value.trim(),n=document.getElementById('prioNote').value.trim(),sa=document.getElementById('prioSheAsked').checked;
+  if(!t)return;
+  await persist({type:'journal',title:t,body:JSON.stringify({kind2:'priority',note:n,prio:prioSel,done:false,sheAsked:sa})});
+  document.getElementById('prioTitle').value='';document.getElementById('prioNote').value='';document.getElementById('prioSheAsked').checked=false;
+  toast(lang==='es'?'Agregado':'Added');renderPriorities();
+};
+
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();
 if(window.supabase&&window.supabase.createClient){
   supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   supa.auth.getSession().then(({data})=>handleSession(data.session));
