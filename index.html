@@ -41,6 +41,23 @@
   .tabs{display:flex;gap:18px;margin:18px 0 22px;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex:0 0 auto;white-space:nowrap}
+  .hamb{background:none;border:none;color:var(--txt);font-size:24px;line-height:1;padding:2px 14px 2px 0;cursor:pointer}
+  .scrim{position:fixed;inset:0;background:rgba(4,8,18,.62);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;left:0;bottom:0;width:258px;max-width:82vw;background:var(--ink-2);border-right:1px solid var(--line);transform:translateX(-100%);transition:transform .22s ease;z-index:50;padding:22px 14px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+  .drawer.open{transform:translateX(0)}
+  .drawer-h{font-family:'Fraunces',serif;color:var(--gold);font-size:20px;font-weight:600;padding:2px 10px 16px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .ditem{display:block;width:100%;text-align:left;border:none!important;background:none;color:var(--txt-soft);font-family:'Inter';font-size:15.5px;font-weight:600;padding:13px 12px;border-radius:10px;cursor:pointer;transition:.15s}
+  .ditem.active{background:var(--ink);color:var(--gold)}
+  .bignum{font-family:'Fraunces',serif;font-size:56px;font-weight:600;color:var(--gold);line-height:1}
+  .gaugewrap{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .slabel{display:flex;justify-content:space-between;font-size:13px;color:var(--txt-soft);margin:2px 0 6px}
+  .chk{display:flex;align-items:flex-start;gap:11px;padding:11px 0;font-size:14.5px;color:var(--txt);cursor:pointer;border-bottom:1px solid var(--line)}
+  .chk input{width:19px;height:19px;flex:0 0 auto;margin-top:1px}
+  .secl{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+  .pill{background:var(--ink);border:1px solid var(--line);border-radius:999px;color:var(--txt-soft);font-family:'Inter';font-size:13px;font-weight:600;padding:8px 13px;cursor:pointer;transition:.12s}
+  .pill.on{background:var(--gold);color:#241B05;border-color:var(--gold)}
+  input[type=range]{accent-color:var(--gold);width:100%}
   .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt-dim);font-family:'Inter';font-size:14px;font-weight:600;padding:10px 2px;cursor:pointer;transition:.15s}
   .tab.active{color:var(--txt);border-bottom-color:var(--gold)}
   .tab:hover{color:var(--txt)}
@@ -184,7 +201,8 @@
 <div id="appView" class="hidden">
 <div class="wrap">
   <header class="top">
-    <div>
+    <button class="hamb" id="hambBtn" aria-label="Menu">☰</button>
+    <div style="flex:1">
       <h1 id="title">Feeling Wheel</h1>
       <div class="greet" id="greet">—</div>
     </div>
@@ -195,13 +213,16 @@
     <button class="linkbtn" id="logoutBtn">Log out</button>
   </div>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="checkin" id="tabCheck">Check in</button>
-    <button class="tab" data-tab="prio" id="tabPrio">Priorities</button>
-    <button class="tab" data-tab="journal" id="tabJournal">Journal</button>
-    <button class="tab" data-tab="connect" id="tabConnect">Connect</button>
-    <button class="tab" data-tab="truths" id="tabTruths">My Worth</button>
-    <button class="tab" data-tab="history" id="tabHistory">History</button>
+  <div class="scrim" id="scrim"></div>
+  <nav class="drawer" id="drawer">
+    <div class="drawer-h">Feeling Wheel</div>
+    <button class="tab ditem active" data-tab="checkin" id="tabCheck">Check in</button>
+    <button class="tab ditem" data-tab="prio" id="tabPrio">Priorities</button>
+    <button class="tab ditem" data-tab="secure" id="tabSecure">Secure Ground</button>
+    <button class="tab ditem" data-tab="truths" id="tabTruths">My Worth</button>
+    <button class="tab ditem" data-tab="connect" id="tabConnect">Connect</button>
+    <button class="tab ditem" data-tab="journal" id="tabJournal">Journal</button>
+    <button class="tab ditem" data-tab="history" id="tabHistory">History</button>
   </nav>
 
   <section id="view-checkin">
@@ -238,6 +259,16 @@
       <div class="nav"><button class="btn primary" id="prioAddBtn">Add to list</button></div>
     </div>
     <div id="prioList" style="margin-top:16px"></div>
+  </section>
+
+  <section id="view-secure" class="hidden">
+    <div class="modes" id="secureSub" style="margin-bottom:16px">
+      <button class="mode active" data-sub="ground" id="ssGround">Ground</button>
+      <button class="mode" data-sub="catch" id="ssCatch">Catch</button>
+      <button class="mode" data-sub="trust" id="ssTrust">Trust</button>
+      <button class="mode" data-sub="reflect" id="ssReflect">Reflect</button>
+    </div>
+    <div id="secureBody"></div>
   </section>
 
   <section id="view-truths" class="hidden">
@@ -326,7 +357,7 @@ const UI={
    ckTotal:"check-ins",ckWeek:"this week",ckStreak:"day streak",spend:"Where you've been spending time",balance:"Mood balance",
    exportB:"Export backup",importB:"Import backup",timeline:"Timeline",tlnone:"Nothing logged yet. Your first check-in shows up here.",
    foot:"Saved to your private cloud and synced across your devices. Export backup any time for an extra copy.",
-   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…",connect:"Connect",cTitle:"Talk it through",cSub:"Before you bring it to her, get clear. Most of the fight runs on a guess about what's in her head — and you can't be in there. Separate what you KNOW from what you're GUESSING.",cSituation:"What happened?",cSituationS:"Just the facts — what a camera would see.",cSituationP:"She said… / I walked in and…",cLoop:"Your loop",cLoopS:"What it set off inside you.",cPerceptionL:"What I made it mean",cEmotionL:"What I felt",cResponseL:"What I did, or wanted to do",cUnknown:"Mark the unknown",cUnknownS:"This is the one. Sort what's real from what's a guess.",cKnowL:"What I actually KNOW (she said / did)",cThinkL:"What I THINK is going on for her",cGuessL:"What I'm GUESSING (could be wrong)",cOff:"The off-ramp",cOffS:"A truer move now.",cBetterL:"A better response now",cSayL:"What I'll open with — one sentence",cSaveBtn:"Save talk-through",cSaved:"Talk-through saved",cBack:"Back",cNext:"Next",topicsTitle:"Topics to revisit",topicsSub:"Things you've both stepped around. Name them so you can choose to invest the time together.",topicTitleP:"The topic…",topicNoteP:"Why it's been hard / what you want from it (optional)",topicAddBtn:"Add topic",topicNone:"No topics yet. Add the first one you've been avoiding.",markDone:"Talked about it",reopen:"Revisit again",statusOpen:"to discuss",statusDone:"talked about",repairsPast:"Past talk-throughs",repairsNone:"No talk-throughs yet.",saveSelf:"Save Yourself",close:"Close",ovEyebrow:"Breathe. This is who you are.",ovHero:"Come back to what is true.",ovSetup:"First, set up your truths. Paste them from your Positive Belief Record — they save privately, only for you.",ovNewBeliefL:"My belief about myself (the new, true one)",ovNewBeliefP:"I am a Child of God with infinite value…",ovEvidenceL:"The evidence — one per line",ovEvidenceP:"I am a child of God, because…\nI am not a failure because…",ovSaveBeliefs:"Save my truths",ovEdit:"Edit my truths",ovTriggerL:"What triggered this? (so you learn your patterns)",ovTriggerP:"What just happened / what set it off…",ovGround:"I am grounded — save",ovGrounded:"Saved. You showed up for yourself.",groundedTL:"Grounded",groundedRecent:"Recent grounding moments",truthsTab:"My Worth",groundedTruthsL:"The truths I came back to",prioTab:"Priorities",prioTitle:"Priority checklist",prioSub:"The things that have been asked of you — and the ones you keep meaning to do. Put them here, rank them, knock them out. Following through is how trust gets rebuilt.",prioTaskP:"The task / chore…",prioNoteP:"Any detail (optional)…",prioAddBtn:"Add to list",prioNone:"Nothing on the list yet. Add the first thing you've been putting off.",prioHigh:"High",prioMed:"Medium",prioLow:"Low",sheAsked:"She asked for this",prioDone:"Mark done",prioReopen:"Not done",prioOpenL:"still to do",prioDueLbl:"Goal date (optional)",remindBtn:"⏰ Remind me",dueToday:"Due today",dueTomorrow:"Due tomorrow",dueOverdue:"overdue",dueIn:"Due "},
+   needfeeling:"Pick a feeling on the wheel first.",syncing:"Syncing…",connect:"Connect",cTitle:"Talk it through",cSub:"Before you bring it to her, get clear. Most of the fight runs on a guess about what's in her head — and you can't be in there. Separate what you KNOW from what you're GUESSING.",cSituation:"What happened?",cSituationS:"Just the facts — what a camera would see.",cSituationP:"She said… / I walked in and…",cLoop:"Your loop",cLoopS:"What it set off inside you.",cPerceptionL:"What I made it mean",cEmotionL:"What I felt",cResponseL:"What I did, or wanted to do",cUnknown:"Mark the unknown",cUnknownS:"This is the one. Sort what's real from what's a guess.",cKnowL:"What I actually KNOW (she said / did)",cThinkL:"What I THINK is going on for her",cGuessL:"What I'm GUESSING (could be wrong)",cOff:"The off-ramp",cOffS:"A truer move now.",cBetterL:"A better response now",cSayL:"What I'll open with — one sentence",cSaveBtn:"Save talk-through",cSaved:"Talk-through saved",cBack:"Back",cNext:"Next",topicsTitle:"Topics to revisit",topicsSub:"Things you've both stepped around. Name them so you can choose to invest the time together.",topicTitleP:"The topic…",topicNoteP:"Why it's been hard / what you want from it (optional)",topicAddBtn:"Add topic",topicNone:"No topics yet. Add the first one you've been avoiding.",markDone:"Talked about it",reopen:"Revisit again",statusOpen:"to discuss",statusDone:"talked about",repairsPast:"Past talk-throughs",repairsNone:"No talk-throughs yet.",saveSelf:"Save Yourself",close:"Close",ovEyebrow:"Breathe. This is who you are.",ovHero:"Come back to what is true.",ovSetup:"First, set up your truths. Paste them from your Positive Belief Record — they save privately, only for you.",ovNewBeliefL:"My belief about myself (the new, true one)",ovNewBeliefP:"I am a Child of God with infinite value…",ovEvidenceL:"The evidence — one per line",ovEvidenceP:"I am a child of God, because…\nI am not a failure because…",ovSaveBeliefs:"Save my truths",ovEdit:"Edit my truths",ovTriggerL:"What triggered this? (so you learn your patterns)",ovTriggerP:"What just happened / what set it off…",ovGround:"I am grounded — save",ovGrounded:"Saved. You showed up for yourself.",groundedTL:"Grounded",groundedRecent:"Recent grounding moments",truthsTab:"My Worth",groundedTruthsL:"The truths I came back to",prioTab:"Priorities",prioTitle:"Priority checklist",prioSub:"The things that have been asked of you — and the ones you keep meaning to do. Put them here, rank them, knock them out. Following through is how trust gets rebuilt.",prioTaskP:"The task / chore…",prioNoteP:"Any detail (optional)…",prioAddBtn:"Add to list",prioNone:"Nothing on the list yet. Add the first thing you've been putting off.",prioHigh:"High",prioMed:"Medium",prioLow:"Low",sheAsked:"She asked for this",prioDone:"Mark done",prioReopen:"Not done",prioOpenL:"still to do",prioDueLbl:"Goal date (optional)",remindBtn:"⏰ Remind me",dueToday:"Due today",dueTomorrow:"Due tomorrow",dueOverdue:"overdue",dueIn:"Due ",secureTab:"Secure Ground",ssGround:"Ground",ssCatch:"Catch",ssTrust:"Trust",ssReflect:"Reflect",sgStyle:"Your pattern",sgStyleVal:"Anxious-Preoccupied",sgGaugeSub:"Anxiety goes up, avoidance goes right. Secure is the bottom-left corner. The gold dot is your baseline; every reading you log moves the trail toward secure.",sgBaseL:"Baseline",sgLatest:"Latest",sgLogReadingTitle:"Log a reading",sgLogReadingSub:"How activated are you these days? Be honest — it's just data so you can watch the trail move.",sgAnxL:"Anxiety",sgAvoidL:"Avoidance",sgLowCalm:"calm",sgHighActiv:"activated",sgLowOpen:"open",sgHighWall:"walled off",sgSaveReading:"Save reading",sgTargetTitle:"The path",sgTarget1:"Now: 7.3 anxiety / 4.0 avoidance",sgTarget2:"3–6 mo: anxiety ~5.5 — catch spirals, cut reassurance-seeking",sgTarget3:"6–12 mo: anxiety ~4.5 — direct asks the default, keep avoidance ≤4",sgTarget4:"Secure: both under ~3.5 — don't overcorrect into a wall",catchTitle:"Catch a spiral",catchSub:"The moment you feel it climbing — name it, soothe it, log it. Every one you stop counts more than a calm day.",catchDomainL:"Where is this aimed?",catchDomMyself:"Myself",catchDomRomantic:"Wife",catchDomKids:"Kids",catchDomFamily:"Family",catchDomFriends:"Friends",catchStoryL:"The story I'm telling myself",catchStoryP:"e.g. \"She doesn't care\" / \"She's going to leave\"…",catchFactL:"The actual fact (can't name one? that's proof it's a story)",catchFactP:"What do I actually know for sure?",catchToolsL:"What brought me down",toolGoodEnough:"\"I am good enough\"",toolBreath:"Breathing",toolPrayer:"Prayer",toolStayed:"Stayed in the room",toolSpace:"Gave space cleanly",catchMinL:"Minutes to come back",catchStopped:"I stopped it",catchRan:"It ran",catchSave:"Log it",catchNone:"No spirals logged yet.",catchStoppedTag:"stopped",catchRanTag:"ran",trustTitle:"Days trusting her without checking",trustSub:"The urge to check the camera or Wi-Fi is the spiral — not a reason to look. Logging a check resets the count, but it's data, not failure.",trustBest:"Best run",trustSlips:"Times checked",trustSlipBtn:"I checked — log it honestly",trustSlipQ:"What pulled you to check?",trustTrigGone:"She'd been gone a while",trustTrigEve:"Evening",trustTrigAnx:"An anxious thought",trustTrigHabit:"Just habit",trustLogged:"Logged — that's data, not failure.",trustDay:"day",trustDays:"days",trustSoothe:"\"She's a grown woman living her life. I am good enough whether she's home or not.\"",reflectTitle:"Today's reflection",reflectSub:"Did I run the old patterns, or the new ones? Honest check, once a day.",reflectDonts:"The old patterns — catch these",rDont1:"Filled in a blank about what she's thinking",rDont2:"Rehearsed an ending that hasn't happened",rDont3:"Monitored or checked on her",rDont4:"Pushed for agreement / imposed my view",reflectDos:"The new patterns — build these",rDo1:"Gave space cleanly, without watching for it to work",rDo2:"Said my piece once, then let it be",rDo3:"Stayed in the room when it got uncomfortable",rDo4:"Soothed myself instead of needing reassurance",reflectReg:"I regulated myself today",reflectSave:"Save today",reflectSaved:"Saved"},
  es:{title:"Rueda de Emociones",lang:"English",check:"Registro",journal:"Diario",history:"Historial",logout:"Salir",
    authTitle:"Rueda de Emociones",authIntro:"Tu diario privado. Entra con tu correo y contraseña. ¿Primera vez? Toca Crear cuenta.",authEmail:"Correo",authPass:"Contraseña",authBtn:"Entrar",authSignup:"Crear cuenta",authNote:"Solo tú puedes leer lo que escribes aquí. Tus entradas están bloqueadas a tu cuenta.",
    gMorning:"Buenos días, Alex",gAfternoon:"Buenas tardes, Alex",gEvening:"Buenas noches, Alex",
@@ -348,7 +379,7 @@ const UI={
    ckTotal:"registros",ckWeek:"esta semana",ckStreak:"días seguidos",spend:"Dónde has pasado el tiempo",balance:"Balance emocional",
    exportB:"Exportar respaldo",importB:"Importar respaldo",timeline:"Línea de tiempo",tlnone:"Nada registrado aún. Tu primer registro aparecerá aquí.",
    foot:"Guardado en tu nube privada y sincronizado entre tus dispositivos. Exporta un respaldo cuando quieras.",
-   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor",groundedTruthsL:"Las verdades a las que volví",prioTab:"Prioridades",prioTitle:"Lista de prioridades",prioSub:"Las cosas que te han pedido — y las que sigues posponiendo. Ponlas aquí, ordénalas, complétalas. Cumplir es como se reconstruye la confianza.",prioTaskP:"La tarea / pendiente…",prioNoteP:"Algún detalle (opcional)…",prioAddBtn:"Agregar a la lista",prioNone:"Nada en la lista aún. Agrega lo primero que has estado posponiendo.",prioHigh:"Alta",prioMed:"Media",prioLow:"Baja",sheAsked:"Ella lo pidió",prioDone:"Marcar hecho",prioReopen:"Sin hacer",prioOpenL:"por hacer",prioDueLbl:"Fecha meta (opcional)",remindBtn:"⏰ Recuérdame",dueToday:"Vence hoy",dueTomorrow:"Vence mañana",dueOverdue:"vencido",dueIn:"Vence "}
+   needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor",groundedTruthsL:"Las verdades a las que volví",prioTab:"Prioridades",prioTitle:"Lista de prioridades",prioSub:"Las cosas que te han pedido — y las que sigues posponiendo. Ponlas aquí, ordénalas, complétalas. Cumplir es como se reconstruye la confianza.",prioTaskP:"La tarea / pendiente…",prioNoteP:"Algún detalle (opcional)…",prioAddBtn:"Agregar a la lista",prioNone:"Nada en la lista aún. Agrega lo primero que has estado posponiendo.",prioHigh:"Alta",prioMed:"Media",prioLow:"Baja",sheAsked:"Ella lo pidió",prioDone:"Marcar hecho",prioReopen:"Sin hacer",prioOpenL:"por hacer",prioDueLbl:"Fecha meta (opcional)",remindBtn:"⏰ Recuérdame",dueToday:"Vence hoy",dueTomorrow:"Vence mañana",dueOverdue:"vencido",dueIn:"Vence ",secureTab:"Terreno Seguro",ssGround:"Base",ssCatch:"Atrapar",ssTrust:"Confianza",ssReflect:"Reflexión",sgStyle:"Tu patrón",sgStyleVal:"Ansioso-Preocupado",sgGaugeSub:"La ansiedad sube, la evitación va a la derecha. Lo seguro es la esquina inferior izquierda. El punto dorado es tu base; cada lectura mueve el rastro hacia lo seguro.",sgBaseL:"Base",sgLatest:"Última",sgLogReadingTitle:"Registrar lectura",sgLogReadingSub:"¿Qué tan activado estás estos días? Sé honesto — es solo data para ver moverse el rastro.",sgAnxL:"Ansiedad",sgAvoidL:"Evitación",sgLowCalm:"calma",sgHighActiv:"activado",sgLowOpen:"abierto",sgHighWall:"amurallado",sgSaveReading:"Guardar lectura",sgTargetTitle:"El camino",sgTarget1:"Ahora: 7.3 ansiedad / 4.0 evitación",sgTarget2:"3–6 meses: ansiedad ~5.5 — atrapa espirales, reduce buscar tranquilización",sgTarget3:"6–12 meses: ansiedad ~4.5 — pedir directo por defecto, evitación ≤4",sgTarget4:"Seguro: ambos bajo ~3.5 — sin sobrecorregir en un muro",catchTitle:"Atrapar una espiral",catchSub:"El momento en que la sientes subir — nómbrala, cálmala, regístrala. Cada una que detienes cuenta más que un día tranquilo.",catchDomainL:"¿Hacia dónde apunta?",catchDomMyself:"Yo",catchDomRomantic:"Esposa",catchDomKids:"Hijos",catchDomFamily:"Familia",catchDomFriends:"Amigos",catchStoryL:"La historia que me estoy contando",catchStoryP:"ej. \"No le importo\" / \"Se va a ir\"…",catchFactL:"El hecho real (¿no puedes nombrar uno? eso prueba que es historia)",catchFactP:"¿Qué sé con certeza?",catchToolsL:"Qué me calmó",toolGoodEnough:"\"Soy suficiente\"",toolBreath:"Respirar",toolPrayer:"Oración",toolStayed:"Me quedé en el cuarto",toolSpace:"Di espacio limpiamente",catchMinL:"Minutos para volver",catchStopped:"La detuve",catchRan:"Se desbordó",catchSave:"Registrar",catchNone:"Aún no hay espirales registradas.",catchStoppedTag:"detenida",catchRanTag:"desbordada",trustTitle:"Días confiando en ella sin revisar",trustSub:"El impulso de revisar la cámara o el Wi-Fi es la espiral — no una razón para mirar. Registrar una revisión reinicia el conteo, pero es data, no fracaso.",trustBest:"Mejor racha",trustSlips:"Veces revisado",trustSlipBtn:"Revisé — regístralo con honestidad",trustSlipQ:"¿Qué te llevó a revisar?",trustTrigGone:"Llevaba rato fuera",trustTrigEve:"De noche",trustTrigAnx:"Un pensamiento ansioso",trustTrigHabit:"Solo costumbre",trustLogged:"Registrado — es data, no fracaso.",trustDay:"día",trustDays:"días",trustSoothe:"\"Es una mujer adulta viviendo su vida. Soy suficiente esté ella en casa o no.\"",reflectTitle:"Reflexión de hoy",reflectSub:"¿Corrí los patrones viejos o los nuevos? Chequeo honesto, una vez al día.",reflectDonts:"Patrones viejos — atrápalos",rDont1:"Llené un vacío sobre lo que ella piensa",rDont2:"Ensayé un final que no ha pasado",rDont3:"La monitoreé o revisé",rDont4:"Presioné por acuerdo / impuse mi punto",reflectDos:"Patrones nuevos — constrúyelos",rDo1:"Di espacio limpiamente, sin vigilar si funciona",rDo2:"Dije lo mío una vez y lo dejé ir",rDo3:"Me quedé en el cuarto cuando se puso incómodo",rDo4:"Me calmé en vez de necesitar tranquilización",reflectReg:"Hoy me regulé",reflectSave:"Guardar hoy",reflectSaved:"Guardado"}
 };
 
 const STEPS={morning:["primary","intensity","morningclose"],evening:["primary","intensity","trigger","selftalk","physical","lessons"],moment:["primary","intensity","trigger","selftalk","physical","lessons"]};
@@ -414,7 +445,7 @@ async function removeEntry(id){
   _all=_all.filter(x=>x.id!=id);setCache();
   if(supa&&currentUser&&!String(id).startsWith('local-')){try{await supa.from('entries').delete().eq('id',id);}catch{}}
 }
-function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();}
+function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();}
 
 /* ===== WHEEL ===== */
 const CX=360,CY=360,R1=150,R2=250,R3=345,cores=Object.keys(DATA);
@@ -576,7 +607,7 @@ function renderHistory(){
   const allFeels=ck.flatMap(feelingsOf);const ht=document.getElementById('histThermo');
   if(ht)ht.innerHTML=allFeels.length?thermoHTML(moodScore(allFeels),lang==='es'?'En todos tus registros':'Across all your check-ins'):`<div style="color:var(--txt-dim);font-size:13px">${lang==='es'?'Aún sin datos.':'No data yet.'}</div>`;
   const bars=document.getElementById('bars');if(bars)bars.innerHTML=cores.map(c=>[c,counts[c]]).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<div class="barrow"><div class="nm">${lang==='es'?CORE_ES[c]:c}</div><div class="bartrack"><div class="barfill" style="width:${n/max*100}%;background:${DATA[c].color}"></div></div><div class="ct">${n}</div></div>`).join('');
-  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)&&!isPriority(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
+  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)&&!isPriority(e)&&!isReading(e)&&!isSpiral(e)&&!isSlip(e)&&!isReflect(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
   if(!all.length){box.innerHTML=`<div class="none">${T.tlnone}</div>`;return;}
   let html='',lastDay='';
   all.forEach(e=>{const dk=new Date(e.ts).toDateString();if(dk!==lastDay){lastDay=dk;html+=`<div class="dayhdr">${dayLabel(e.ts)}</div>`;}html+=entryCardHTML(e,T);});
@@ -602,7 +633,13 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
   document.getElementById('view-connect').classList.toggle('hidden',tab!=='connect');
   document.getElementById('view-truths').classList.toggle('hidden',tab!=='truths');
   document.getElementById('view-prio').classList.toggle('hidden',tab!=='prio');
-  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();});
+  document.getElementById('view-secure').classList.toggle('hidden',tab!=='secure');
+  closeDrawer();
+  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();if(tab==='secure')renderSecure();});
+function closeDrawer(){const d=document.getElementById('drawer'),sc=document.getElementById('scrim');if(d)d.classList.remove('open');if(sc)sc.classList.remove('open');}
+function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('scrim').classList.add('open');}
+document.getElementById('hambBtn').onclick=openDrawer;
+document.getElementById('scrim').onclick=closeDrawer;
 document.getElementById('langBtn').onclick=()=>{lang=lang==='en'?'es':'en';localStorage.setItem('fw.lang',lang);/* ===== CONNECT (relationship / home) ===== */
 let cStep=0,cDraft=blankC();
 function blankC(){return{situation:'',perception:'',emotion:'',response:'',know:'',think:'',guess:'',better:'',say:''};}
@@ -669,7 +706,7 @@ document.getElementById('topicAddBtn').onclick=async()=>{
   toast(UI[lang].cSaved);renderTopics();
 };
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();};
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();};
 function greeting(){const h=new Date().getHours(),T=UI[lang];return h<12?T.gMorning:h<18?T.gAfternoon:T.gEvening;}
 function applyLang(){const T=UI[lang];
   const set=(id,v,html)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
@@ -677,7 +714,8 @@ function applyLang(){const T=UI[lang];
   set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('foot',T.foot,true);
   set('tabConnect',T.connect);set('topicsTitleL',T.topicsTitle);set('topicsSubL',T.topicsSub);set('repairsPastL',T.repairsPast);
-  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);
+  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);set('tabSecure',T.secureTab);
+  {const ss=document.getElementById('secureSub');if(ss){const m=ss.querySelectorAll('.mode');if(m[0])m[0].textContent=T.ssGround;if(m[1])m[1].textContent=T.ssCatch;if(m[2])m[2].textContent=T.ssTrust;if(m[3])m[3].textContent=T.ssReflect;}}
   set('prioTitleL',T.prioTitle);set('prioSubL',T.prioSub);set('sheAskedL',T.sheAsked);
   {const pt=document.getElementById('prioTitle');if(pt)pt.placeholder=T.prioTaskP;const pn=document.getElementById('prioNote');if(pn)pn.placeholder=T.prioNoteP;const pa=document.getElementById('prioAddBtn');if(pa)pa.textContent=T.prioAddBtn;const pd=document.getElementById('prioDueL');if(pd)pd.textContent=T.prioDueLbl;
    const pb=document.getElementById('prioBtns');if(pb){const m=pb.querySelectorAll('.mode');if(m[0])m[0].textContent=T.prioHigh;if(m[1])m[1].textContent=T.prioMed;if(m[2])m[2].textContent=T.prioLow;}}
@@ -870,7 +908,126 @@ document.getElementById('prioAddBtn').onclick=async()=>{
   toast(lang==='es'?'Agregado':'Added');renderPriorities();
 };
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();
+/* ===== SECURE GROUND (attachment tracker) ===== */
+const ATTACH_BASE={anx:7.3,avoid:4.0};
+let secureSub='ground',catchTools=new Set(),catchStopped=true,catchDomain='myself',sgAnx=7.3,sgAvoid=4.0;
+function isReading(e){const p=parseBody(e);return!!(p&&p.kind2==='reading');}
+function isSpiral(e){const p=parseBody(e);return!!(p&&p.kind2==='spiral');}
+function isSlip(e){const p=parseBody(e);return!!(p&&p.kind2==='trustslip');}
+function isReflect(e){const p=parseBody(e);return!!(p&&p.kind2==='reflect');}
+function readingsArr(){return _all.filter(isReading).map(e=>{const p=parseBody(e)||{};return{anx:p.anx,avoid:p.avoid,ts:e.ts};}).sort((a,b)=>new Date(a.ts)-new Date(b.ts));}
+(function(){const ss=document.getElementById('secureSub');if(ss)ss.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{secureSub=b.dataset.sub;ss.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderSecure();});})();
+function gaugeSVG(){const W=300,H=300,m=34,pw=W-m*2,ph=H-m*2;const X=av=>m+(av/10)*pw,Y=an=>m+(1-an/10)*ph;
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+  g+=`<rect x="${m}" y="${m}" width="${pw}" height="${ph}" fill="#0b1020" stroke="#243049"/>`;
+  g+=`<rect x="${m}" y="${Y(5)}" width="${pw/2}" height="${ph/2}" fill="#0F6E56" opacity="0.16"/>`;
+  for(let v=2;v<10;v+=2){g+=`<line x1="${X(v)}" y1="${m}" x2="${X(v)}" y2="${m+ph}" stroke="#1a2336"/><line x1="${m}" y1="${Y(v)}" x2="${m+pw}" y2="${Y(v)}" stroke="#1a2336"/>`;}
+  g+=`<line x1="${X(5)}" y1="${m}" x2="${X(5)}" y2="${m+ph}" stroke="#2c3a55"/><line x1="${m}" y1="${Y(5)}" x2="${m+pw}" y2="${Y(5)}" stroke="#2c3a55"/>`;
+  g+=`<text x="${X(2.5)}" y="${Y(2.4)}" fill="#4FB3A6" font-size="11" font-weight="700" text-anchor="middle">Secure</text>`;
+  g+=`<text x="${X(2.5)}" y="${Y(7.6)}" fill="#7d88a8" font-size="9" text-anchor="middle">Anxious</text>`;
+  g+=`<text x="${X(7.5)}" y="${Y(7.6)}" fill="#7d88a8" font-size="9" text-anchor="middle">Fearful</text>`;
+  g+=`<text x="${X(7.5)}" y="${Y(2.4)}" fill="#7d88a8" font-size="9" text-anchor="middle">Avoidant</text>`;
+  g+=`<text x="${W/2}" y="${H-6}" fill="#7d88a8" font-size="10" text-anchor="middle">Avoidance →</text>`;
+  g+=`<text x="11" y="${H/2}" fill="#7d88a8" font-size="10" text-anchor="middle" transform="rotate(-90 11 ${H/2})">Anxiety →</text>`;
+  const tp=[[4.0,7.3],[4.0,5.5],[3.5,4.5],[3.2,3.2]];
+  g+=`<path d="${tp.map((p,i)=>`${i?'L':'M'}${X(p[0])} ${Y(p[1])}`).join(' ')}" fill="none" stroke="#E8B04B" stroke-width="1.3" stroke-dasharray="4 4" opacity="0.45"/>`;
+  tp.forEach((p,i)=>{if(i)g+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="3" fill="none" stroke="#E8B04B" opacity="0.55"/>`;});
+  const rd=readingsArr();
+  if(rd.length){g+=`<path d="M${X(ATTACH_BASE.avoid)} ${Y(ATTACH_BASE.anx)} ${rd.map(p=>`L${X(p.avoid)} ${Y(p.anx)}`).join(' ')}" fill="none" stroke="#4FB3A6" stroke-width="2"/>`;
+    rd.forEach((p,i)=>{const last=i===rd.length-1;g+=`<circle cx="${X(p.avoid)}" cy="${Y(p.anx)}" r="${last?6:3.5}" fill="${last?'#4FB3A6':'#2f5d54'}"/>`;});}
+  g+=`<circle cx="${X(ATTACH_BASE.avoid)}" cy="${Y(ATTACH_BASE.anx)}" r="6" fill="#E8B04B" stroke="#0E1428" stroke-width="2"/>`;
+  g+=`</svg>`;return g;}
+function renderSecure(){const b=document.getElementById('secureBody');if(!b)return;const T=UI[lang];
+  if(secureSub==='ground')return renderGround(b,T);
+  if(secureSub==='catch')return renderCatch(b,T);
+  if(secureSub==='trust')return renderTrust(b,T);
+  if(secureSub==='reflect')return renderReflect(b,T);}
+function renderGround(b,T){const rd=readingsArr(),latest=rd[rd.length-1];
+  b.innerHTML=`<div class="card"><div class="secl">${T.sgStyle}</div>
+    <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--gold);margin:2px 0 6px">${T.sgStyleVal}</div>
+    <div class="qsub">${T.sgGaugeSub}</div>
+    <div class="gaugewrap" style="margin-top:12px">${gaugeSVG()}</div>
+    <div class="meta" style="margin-top:10px">${T.sgBaseL}: ${ATTACH_BASE.anx} / ${ATTACH_BASE.avoid}${latest?`  ·  ${T.sgLatest}: ${latest.anx} / ${latest.avoid}`:''}</div></div>
+    <div class="card"><div class="secl">${T.sgLogReadingTitle}</div><div class="qsub" style="margin-bottom:16px">${T.sgLogReadingSub}</div>
+    <div class="slabel"><span>${T.sgAnxL}: <b id="sgAnxV" style="color:var(--gold)">${sgAnx}</b></span><span>${T.sgLowCalm} – ${T.sgHighActiv}</span></div>
+    <input type="range" min="0" max="10" step="0.5" value="${sgAnx}" id="sgAnxR">
+    <div class="slabel" style="margin-top:16px"><span>${T.sgAvoidL}: <b id="sgAvoidV" style="color:var(--gold)">${sgAvoid}</b></span><span>${T.sgLowOpen} – ${T.sgHighWall}</span></div>
+    <input type="range" min="0" max="10" step="0.5" value="${sgAvoid}" id="sgAvoidR">
+    <div class="nav"><button class="btn primary" id="sgSave">${T.sgSaveReading}</button></div></div>
+    <div class="card"><div class="secl">${T.sgTargetTitle}</div>
+    <div class="qa" style="border:none;padding-left:0;line-height:1.9">• ${T.sgTarget1}<br>• ${T.sgTarget2}<br>• ${T.sgTarget3}<br>• ${T.sgTarget4}</div></div>`;
+  const ar=document.getElementById('sgAnxR'),vr=document.getElementById('sgAvoidR');
+  ar.oninput=()=>{sgAnx=parseFloat(ar.value);document.getElementById('sgAnxV').textContent=sgAnx;};
+  vr.oninput=()=>{sgAvoid=parseFloat(vr.value);document.getElementById('sgAvoidV').textContent=sgAvoid;};
+  document.getElementById('sgSave').onclick=async()=>{await persist({type:'journal',title:'Reading',body:JSON.stringify({kind2:'reading',anx:sgAnx,avoid:sgAvoid})});toast(lang==='es'?'Guardado':'Saved');renderGround(b,T);};}
+function renderCatch(b,T){const doms=[['myself',T.catchDomMyself],['romantic',T.catchDomRomantic],['kids',T.catchDomKids],['family',T.catchDomFamily],['friends',T.catchDomFriends]];
+  const tools=[['goodenough',T.toolGoodEnough],['breath',T.toolBreath],['prayer',T.toolPrayer],['stayed',T.toolStayed],['space',T.toolSpace]];
+  b.innerHTML=`<div class="card"><div class="secl">${T.catchTitle}</div><div class="qsub" style="margin-bottom:16px">${T.catchSub}</div>
+    <label class="fld">${T.catchDomainL}</label>
+    <div id="catchDoms" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px">${doms.map(d=>`<button class="pill${catchDomain===d[0]?' on':''}" data-d="${d[0]}">${d[1]}</button>`).join('')}</div>
+    <div class="field"><label class="fld">${T.catchStoryL}</label><textarea id="catchStory" rows="2" placeholder="${T.catchStoryP}"></textarea></div>
+    <div class="field"><label class="fld">${T.catchFactL}</label><textarea id="catchFact" rows="2" placeholder="${T.catchFactP}"></textarea></div>
+    <label class="fld">${T.catchToolsL}</label>
+    <div id="catchToolsBox" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px">${tools.map(t=>`<button class="pill${catchTools.has(t[0])?' on':''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
+    <div class="field"><label class="fld">${T.catchMinL}</label><input type="number" id="catchMin" min="0" inputmode="numeric" style="width:110px"></div>
+    <div class="modes" id="catchOutcome" style="margin-bottom:14px"><button class="mode${catchStopped?' active':''}" data-o="1">${T.catchStopped}</button><button class="mode${!catchStopped?' active':''}" data-o="0">${T.catchRan}</button></div>
+    <div class="nav"><button class="btn primary" id="catchSaveBtn">${T.catchSave}</button></div></div>
+    <div id="catchList"></div>`;
+  const dbox=document.getElementById('catchDoms');dbox.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{catchDomain=p.dataset.d;dbox.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));p.classList.add('on');});
+  const tbox=document.getElementById('catchToolsBox');tbox.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{const k=p.dataset.t;if(catchTools.has(k)){catchTools.delete(k);p.classList.remove('on');}else{catchTools.add(k);p.classList.add('on');}});
+  const ob=document.getElementById('catchOutcome');ob.querySelectorAll('.mode').forEach(mb=>mb.onclick=()=>{catchStopped=mb.dataset.o==='1';ob.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));mb.classList.add('active');});
+  document.getElementById('catchSaveBtn').onclick=async()=>{const story=document.getElementById('catchStory').value.trim(),fact=document.getElementById('catchFact').value.trim(),min=document.getElementById('catchMin').value;
+    if(!story&&!catchTools.size){toast(lang==='es'?'Nombra la historia primero':'Name the story first');return;}
+    await persist({type:'journal',title:'Spiral',body:JSON.stringify({kind2:'spiral',domain:catchDomain,story,fact,tools:[...catchTools],minutes:min?parseInt(min):null,stopped:catchStopped})});
+    catchTools=new Set();catchStopped=true;toast(lang==='es'?'Registrado':'Logged');renderCatch(b,T);};
+  renderCatchList(T);}
+function renderCatchList(T){const box=document.getElementById('catchList');if(!box)return;const a=_all.filter(isSpiral).sort((x,y)=>new Date(y.ts)-new Date(x.ts));
+  if(!a.length){box.innerHTML=`<div class="none">${T.catchNone}</div>`;return;}
+  const dl={myself:T.catchDomMyself,romantic:T.catchDomRomantic,kids:T.catchDomKids,family:T.catchDomFamily,friends:T.catchDomFriends};
+  box.innerHTML=a.map(e=>{const p=parseBody(e)||{},d=new Date(e.ts);
+    return`<div class="entry"><div class="hd"><div class="fl">✦ ${dl[p.domain]||''}</div><div class="dt">${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
+      ${p.story?`<div class="qa"><span>${T.catchStoryL}</span>${esc(p.story)}</div>`:''}${p.fact?`<div class="qa"><span>${T.catchFactL}</span>${esc(p.fact)}</div>`:''}
+      <div class="meta">${p.stopped?'✅ '+T.catchStoppedTag:'· '+T.catchRanTag}${p.minutes!=null?` · ${p.minutes} min`:''}</div>
+      <button class="del" data-id="${e.id}">delete</button></div>`;}).join('');
+  box.querySelectorAll('.del').forEach(btn=>btn.onclick=async()=>{await removeEntry(btn.dataset.id);renderCatchList(T);});}
+function trustStartTs(){const slips=_all.filter(isSlip).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  if(slips.length)return new Date(slips[0].ts).getTime();
+  let st=localStorage.getItem('fw.truststart');if(!st){st=Date.now().toString();localStorage.setItem('fw.truststart',st);}return parseInt(st);}
+function renderTrust(b,T){const slips=_all.filter(isSlip).sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+  const start=trustStartTs(),days=Math.max(0,Math.floor((Date.now()-start)/86400000));
+  const tsArr=slips.map(e=>new Date(e.ts).getTime());let best=days,prev=parseInt(localStorage.getItem('fw.truststart')||Date.now());
+  tsArr.forEach(t=>{const gap=Math.floor((t-prev)/86400000);if(gap>best)best=gap;prev=t;});
+  b.innerHTML=`<div class="card" style="text-align:center;padding:26px 18px"><div class="secl" style="margin-bottom:14px">${T.trustTitle}</div>
+    <div class="bignum">${days}</div><div class="meta" style="justify-content:center;margin-top:8px">${days===1?T.trustDay:T.trustDays}</div>
+    <div style="display:flex;justify-content:center;gap:30px;margin-top:18px">
+      <div><div style="font-size:20px;font-weight:700;color:var(--txt)">${best}</div><div class="meta" style="justify-content:center">${T.trustBest}</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:var(--txt)">${slips.length}</div><div class="meta" style="justify-content:center">${T.trustSlips}</div></div></div></div>
+    <div class="card"><div class="qa" style="border:none;padding-left:0;color:var(--gold);font-size:15px">${T.trustSoothe}</div>
+    <div class="qsub" style="margin-top:10px">${T.trustSub}</div>
+    <div id="slipArea" style="margin-top:16px"><button class="btn ghost" id="slipBtn">${T.trustSlipBtn}</button></div></div>`;
+  document.getElementById('slipBtn').onclick=()=>{const area=document.getElementById('slipArea');const trigs=[['gone',T.trustTrigGone],['eve',T.trustTrigEve],['anx',T.trustTrigAnx],['habit',T.trustTrigHabit]];
+    area.innerHTML=`<div class="qsub" style="margin-bottom:12px">${T.trustSlipQ}</div>${trigs.map(t=>`<button class="btn ghost slipt" data-t="${t[0]}" style="display:block;width:100%;margin-bottom:8px">${t[1]}</button>`).join('')}`;
+    area.querySelectorAll('.slipt').forEach(btn=>btn.onclick=async()=>{await persist({type:'journal',title:'Checked',body:JSON.stringify({kind2:'trustslip',trigger:btn.dataset.t})});localStorage.setItem('fw.truststart',Date.now().toString());toast(T.trustLogged);renderTrust(b,T);});};}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todaysReflect(){return _all.filter(isReflect).find(e=>(parseBody(e)||{}).date===todayKey());}
+function renderReflect(b,T){const existing=todaysReflect(),p=existing?(parseBody(existing)||{}):{donts:{},dos:{},regulated:false};
+  const donts=[['d1',T.rDont1],['d2',T.rDont2],['d3',T.rDont3],['d4',T.rDont4]],dos=[['o1',T.rDo1],['o2',T.rDo2],['o3',T.rDo3],['o4',T.rDo4]];
+  const row=(k,label,obj)=>`<label class="chk"><input type="checkbox" data-k="${k}" ${obj&&obj[k]?'checked':''}><span>${label}</span></label>`;
+  b.innerHTML=`<div class="card"><div class="secl">${T.reflectTitle}</div><div class="qsub" style="margin-bottom:6px">${T.reflectSub}</div>
+    <div class="fld" style="color:#C8694E;margin-top:16px;margin-bottom:2px">${T.reflectDonts}</div>
+    <div id="reflectDonts">${donts.map(d=>row(d[0],d[1],p.donts)).join('')}</div>
+    <div class="fld" style="color:#4FB3A6;margin-top:18px;margin-bottom:2px">${T.reflectDos}</div>
+    <div id="reflectDos">${dos.map(d=>row(d[0],d[1],p.dos)).join('')}</div>
+    <label class="chk" style="margin-top:16px;border:none"><input type="checkbox" id="reflectReg" ${p.regulated?'checked':''}><span style="color:var(--gold);font-weight:600">${T.reflectReg}</span></label>
+    <div class="nav"><button class="btn primary" id="reflectSaveBtn">${T.reflectSave}</button></div></div>`;
+  document.getElementById('reflectSaveBtn').onclick=async()=>{const dn={},dz={};
+    document.querySelectorAll('#reflectDonts input').forEach(i=>dn[i.dataset.k]=i.checked);
+    document.querySelectorAll('#reflectDos input').forEach(i=>dz[i.dataset.k]=i.checked);
+    const body={kind2:'reflect',date:todayKey(),donts:dn,dos:dz,regulated:document.getElementById('reflectReg').checked};
+    if(existing){await updateBody(existing,body);}else{await persist({type:'journal',title:'Reflection',body:JSON.stringify(body)});}
+    toast(T.reflectSaved);renderReflect(b,T);};}
+
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();
 if(window.supabase&&window.supabase.createClient){
   supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   supa.auth.getSession().then(({data})=>handleSession(data.session));
