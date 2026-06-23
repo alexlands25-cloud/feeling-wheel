@@ -337,7 +337,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script>
 /* ===== CONFIG ===== */
 const SUPABASE_URL="https://lqrubkhhsyyhsfvswsko.supabase.co";
@@ -1078,12 +1078,27 @@ function updateNudges(){if(typeof todaysReflect!=='function')return;const pend=p
       bar.querySelectorAll('.nudge-chip').forEach(c=>c.onclick=()=>goTab(c.dataset.tab,c.dataset.sub||''));}}}
 
 applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();updateNudges();
-if(window.supabase&&window.supabase.createClient){
+function initSupa(){
   supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   supa.auth.getSession().then(({data})=>handleSession(data.session));
   supa.auth.onAuthStateChange((_e,session)=>handleSession(session));
-}else{
-  document.getElementById('authMsg').textContent="Couldn't reach the sign-in service. Check your connection and reload.";
+}
+function loadSb(urls){return new Promise((res,rej)=>{(function next(i){
+  if(window.supabase&&window.supabase.createClient)return res();
+  if(i>=urls.length)return rej();
+  const sc=document.createElement('script');sc.src=urls[i];
+  sc.onload=()=>{(window.supabase&&window.supabase.createClient)?res():next(i+1);};
+  sc.onerror=()=>next(i+1);
+  document.head.appendChild(sc);
+})(0);});}
+if(window.supabase&&window.supabase.createClient){initSupa();}
+else{
+  const am=document.getElementById('authMsg');if(am)am.textContent='Connecting…';
+  loadSb(['https://unpkg.com/@supabase/supabase-js@2',
+          'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+          'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'])
+  .then(()=>{const a=document.getElementById('authMsg');if(a)a.textContent='';initSupa();})
+  .catch(()=>{const a=document.getElementById('authMsg');if(a)a.textContent="Couldn't reach the sign-in service. Check your connection (turn off any VPN/Private Relay or content blocker) and reload.";});
 }
 </script>
 </body>
