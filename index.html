@@ -337,7 +337,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script>
 /* ===== CONFIG ===== */
 const SUPABASE_URL="https://lqrubkhhsyyhsfvswsko.supabase.co";
@@ -408,7 +407,7 @@ const STEPS={morning:["primary","intensity","morningclose"],evening:["primary","
 /* ===== STATE ===== */
 let lang=localStorage.getItem("fw.lang")||"en";
 let mode=defaultMode(),step=0,selections=[],draft=blankDraft();
-let supa=null,currentUser=null,_all=[];
+let currentUser=null,_all=[];
 const CACHE="fw.cache",PEND="fw.pending";
 function blankDraft(){return{intensity:5,trigger:"",selftalk:"",physical:"",lessons:"",carry:"",anchor:""};}
 function defaultMode(){const h=new Date().getHours();return (h>=4&&h<15)?"morning":"evening";}
@@ -430,12 +429,29 @@ function setPending(a){localStorage.setItem(PEND,JSON.stringify(a));}
 function rowToEntry(r){return{id:r.id,ts:r.created_at,type:r.kind,mode:r.mode,core:r.core,secondary:r.secondary,tertiary:r.tertiary,intensity:r.intensity,trigger:r.trigger,selftalk:r.selftalk,physical:r.physical,lessons:r.lessons,carry:r.carry,anchor:r.anchor,title:r.title,body:r.body};}
 function entryToRow(e,uid){const r={user_id:uid,kind:e.type,mode:e.mode||null,core:e.core||null,secondary:e.secondary||null,tertiary:e.tertiary||null,intensity:(e.intensity??null),trigger:e.trigger||null,selftalk:e.selftalk||null,physical:e.physical||null,lessons:e.lessons||null,carry:e.carry||null,anchor:e.anchor||null,title:e.title||null,body:e.body||null};if(e.ts)r.created_at=e.ts;return r;}
 
+/* ===== DIRECT SUPABASE (no external library) ===== */
+const GT=SUPABASE_URL+'/auth/v1',REST=SUPABASE_URL+'/rest/v1',TKEY='fw.session';
+function saveSess(x){localStorage.setItem(TKEY,JSON.stringify(x));}
+function getSess(){try{return JSON.parse(localStorage.getItem(TKEY));}catch(e){return null;}}
+function clearSess(){localStorage.removeItem(TKEY);}
+function mkSess(j){return{access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||(Math.floor(Date.now()/1000)+(j.expires_in||3600)),user:j.user};}
+async function gt(path,body){const r=await fetch(GT+path,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('HTTP '+r.status));return j;}
+async function sbSignIn(email,password){const x=mkSess(await gt('/token?grant_type=password',{email,password}));saveSess(x);return x;}
+async function sbSignUp(email,password){const j=await gt('/signup',{email,password});if(j.access_token){const x=mkSess(j);saveSess(x);return x;}return null;}
+async function sbRefresh(){const c=getSess();if(!c||!c.refresh_token)throw new Error('no session');const x=mkSess(await gt('/token?grant_type=refresh_token',{refresh_token:c.refresh_token}));saveSess(x);return x;}
+async function sbRestore(){const c=getSess();if(!c)return null;try{if(!c.expires_at||c.expires_at*1000<Date.now()+60000)return await sbRefresh();return c;}catch(e){clearSess();return null;}}
+function sbSignOut(){const c=getSess();if(c&&c.access_token)fetch(GT+'/logout',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+c.access_token}}).catch(()=>{});clearSess();}
+async function rest(path,opts){opts=opts||{};const c=getSess();opts.headers=Object.assign({'apikey':SUPABASE_KEY,'Authorization':'Bearer '+(c?c.access_token:''),'Content-Type':'application/json'},opts.headers||{});let r=await fetch(REST+path,opts);if(r.status===401){try{const ns=await sbRefresh();opts.headers['Authorization']='Bearer '+ns.access_token;r=await fetch(REST+path,opts);}catch(e){}}return r;}
+async function sbInsert(row){const r=await rest('/entries',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)});const j=await r.json().catch(()=>null);if(!r.ok)throw new Error('insert failed');return Array.isArray(j)?j[0]:j;}
+async function sbSelectAll(){const r=await rest('/entries?select=*&order=created_at.desc');const j=await r.json().catch(()=>null);if(!r.ok)throw new Error('select failed');return j||[];}
+async function sbUpdate(id,patch){await rest('/entries?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(patch)});}
+async function sbDelete(id){await rest('/entries?id=eq.'+encodeURIComponent(id),{method:'DELETE'});}
+
 async function persist(e){
   e.ts=e.ts||new Date().toISOString();
-  if(!supa||!currentUser){const p=pending();p.push(e);setPending(p);_all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();return;}
+  if(!currentUser){const p=pending();p.push(e);setPending(p);_all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();return;}
   try{
-    const{data,error}=await supa.from('entries').insert(entryToRow(e,currentUser.id)).select().single();
-    if(error)throw error;
+    const data=await sbInsert(entryToRow(e,currentUser.id));
     _all.unshift(rowToEntry(data));setCache();
   }catch(err){
     const p=pending();p.push(e);setPending(p);
@@ -444,9 +460,9 @@ async function persist(e){
   }
 }
 async function flushPending(){
-  if(!supa||!currentUser)return;
+  if(!currentUser)return;
   let p=pending();if(!p.length)return;const remain=[];
-  for(const e of p){try{const{error}=await supa.from('entries').insert(entryToRow(e,currentUser.id));if(error)throw error;}catch{remain.push(e);}}
+  for(const e of p){try{await sbInsert(entryToRow(e,currentUser.id));}catch{remain.push(e);}}
   setPending(remain);
 }
 function migrateLocalOnce(){
@@ -459,12 +475,12 @@ async function loadData(){
   _all=getCache();renderActive();
   migrateLocalOnce();
   await flushPending();
-  try{const{data,error}=await supa.from('entries').select('*').order('created_at',{ascending:false});if(error)throw error;_all=data.map(rowToEntry);setCache();}catch(err){}
+  try{const data=await sbSelectAll();_all=data.map(rowToEntry);setCache();}catch(err){}
   renderActive();
 }
 async function removeEntry(id){
   _all=_all.filter(x=>x.id!=id);setCache();
-  if(supa&&currentUser&&!String(id).startsWith('local-')){try{await supa.from('entries').delete().eq('id',id);}catch{}}
+  if(currentUser&&!String(id).startsWith('local-')){try{await sbDelete(id);}catch{}}
 }
 function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();updateNudges();}
 
@@ -718,7 +734,7 @@ function renderTopics(){const T=UI[lang],a=topics().slice(),box=document.getElem
     renderTopics();});
 }
 async function updateBody(e,obj){const nb=JSON.stringify(obj);e.body=nb;e._pb=undefined;setCache();
-  if(supa&&currentUser&&!String(e.id).startsWith('local-')){try{await supa.from('entries').update({body:nb}).eq('id',e.id);}catch{}}}
+  if(currentUser&&!String(e.id).startsWith('local-')){try{await sbUpdate(e.id,{body:nb});}catch{}}}
 document.getElementById('topicAddBtn').onclick=async()=>{
   const t=document.getElementById('topicTitle').value.trim(),n=document.getElementById('topicNote').value.trim();
   if(!t)return;
@@ -753,22 +769,20 @@ document.getElementById('loginBtn').onclick=async()=>{
   const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPass').value;
   if(!email||!pass){document.getElementById('authMsg').textContent=lang==='es'?'Escribe tu correo y contraseña.':'Enter your email and password.';return;}
   const btn=document.getElementById('loginBtn');btn.disabled=true;document.getElementById('authMsg').textContent=UI[lang].syncing;
-  try{const{error}=await supa.auth.signInWithPassword({email,password:pass});
-    if(error)document.getElementById('authMsg').textContent=(lang==='es'?'No pude entrar: ':'Could not log in: ')+error.message;}
-  catch(e){document.getElementById('authMsg').textContent='Error: '+e.message;}
+  try{const x=await sbSignIn(email,pass);handleSession(x);}
+  catch(e){document.getElementById('authMsg').textContent=(lang==='es'?'No pude entrar: ':'Could not log in: ')+e.message;}
   btn.disabled=false;};
 document.getElementById('signupBtn').onclick=async()=>{
   const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPass').value;
   if(!email||!pass){document.getElementById('authMsg').textContent=lang==='es'?'Escribe tu correo y crea una contraseña.':'Enter your email and create a password.';return;}
   if(pass.length<6){document.getElementById('authMsg').textContent=lang==='es'?'La contraseña debe tener al menos 6 caracteres.':'Password must be at least 6 characters.';return;}
   const btn=document.getElementById('signupBtn');btn.disabled=true;document.getElementById('authMsg').textContent=UI[lang].syncing;
-  try{const{data,error}=await supa.auth.signUp({email,password:pass});
-    if(error){document.getElementById('authMsg').textContent=(lang==='es'?'No pude crear la cuenta: ':'Could not create account: ')+error.message;}
-    else if(data.session){/* logged in automatically */}
-    else{document.getElementById('authMsg').textContent=lang==='es'?'Cuenta creada. Si te pide confirmar el correo, revisa tu bandeja, luego entra.':'Account created. If asked to confirm your email, check your inbox, then log in.';}}
-  catch(e){document.getElementById('authMsg').textContent='Error: '+e.message;}
+  try{const x=await sbSignUp(email,pass);
+    if(x){handleSession(x);}
+    else{document.getElementById('authMsg').textContent=lang==='es'?'Cuenta creada. Ahora entra con tu correo y contraseña.':'Account created. Now log in with your email and password.';}}
+  catch(e){document.getElementById('authMsg').textContent=(lang==='es'?'No pude crear la cuenta: ':'Could not create account: ')+e.message;}
   btn.disabled=false;};
-document.getElementById('logoutBtn').onclick=async()=>{await supa.auth.signOut();};
+document.getElementById('logoutBtn').onclick=async()=>{sbSignOut();handleSession(null);};
 
 /* ===== INIT ===== */
 /* ===== CONNECT (relationship / home) ===== */
@@ -828,7 +842,7 @@ function renderTopics(){const T=UI[lang],a=topics().slice(),box=document.getElem
     renderTopics();});
 }
 async function updateBody(e,obj){const nb=JSON.stringify(obj);e.body=nb;e._pb=undefined;setCache();
-  if(supa&&currentUser&&!String(e.id).startsWith('local-')){try{await supa.from('entries').update({body:nb}).eq('id',e.id);}catch{}}}
+  if(currentUser&&!String(e.id).startsWith('local-')){try{await sbUpdate(e.id,{body:nb});}catch{}}}
 document.getElementById('topicAddBtn').onclick=async()=>{
   const t=document.getElementById('topicTitle').value.trim(),n=document.getElementById('topicNote').value.trim();
   if(!t)return;
@@ -1078,28 +1092,7 @@ function updateNudges(){if(typeof todaysReflect!=='function')return;const pend=p
       bar.querySelectorAll('.nudge-chip').forEach(c=>c.onclick=()=>goTab(c.dataset.tab,c.dataset.sub||''));}}}
 
 applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();updateNudges();
-function initSupa(){
-  supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-  supa.auth.getSession().then(({data})=>handleSession(data.session));
-  supa.auth.onAuthStateChange((_e,session)=>handleSession(session));
-}
-function loadSb(urls){return new Promise((res,rej)=>{(function next(i){
-  if(window.supabase&&window.supabase.createClient)return res();
-  if(i>=urls.length)return rej();
-  const sc=document.createElement('script');sc.src=urls[i];
-  sc.onload=()=>{(window.supabase&&window.supabase.createClient)?res():next(i+1);};
-  sc.onerror=()=>next(i+1);
-  document.head.appendChild(sc);
-})(0);});}
-if(window.supabase&&window.supabase.createClient){initSupa();}
-else{
-  const am=document.getElementById('authMsg');if(am)am.textContent='Connecting…';
-  loadSb(['https://unpkg.com/@supabase/supabase-js@2',
-          'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
-          'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'])
-  .then(()=>{const a=document.getElementById('authMsg');if(a)a.textContent='';initSupa();})
-  .catch(()=>{const a=document.getElementById('authMsg');if(a)a.textContent="Couldn't reach the sign-in service. Check your connection (turn off any VPN/Private Relay or content blocker) and reload.";});
-}
+sbRestore().then(x=>handleSession(x)).catch(()=>handleSession(null));
 </script>
 </body>
 </html>
