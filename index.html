@@ -58,6 +58,26 @@
   .pill{background:var(--ink);border:1px solid var(--line);border-radius:999px;color:var(--txt-soft);font-family:'Inter';font-size:13px;font-weight:600;padding:8px 13px;cursor:pointer;transition:.12s}
   .pill.on{background:var(--gold);color:#241B05;border-color:var(--gold)}
   input[type=range]{accent-color:var(--gold);width:100%}
+  .hamb{position:relative}
+  .hamb.alert::after{content:'';position:absolute;top:0;right:6px;width:9px;height:9px;border-radius:50%;background:#E5484D;border:2px solid var(--ink)}
+  .ditem{position:relative}
+  .ditem.alert::after{content:'';position:absolute;top:50%;right:12px;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:#E5484D}
+  .nudge{background:linear-gradient(135deg,rgba(232,176,75,.15),rgba(15,110,86,.12));border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:13px;padding:13px 15px;margin-bottom:20px}
+  .nudge-h{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:9px}
+  .nudge-items{display:flex;flex-wrap:wrap;gap:8px}
+  .nudge-chip{background:var(--ink);border:1px solid var(--line);border-radius:999px;color:var(--txt);font-family:'Inter';font-size:13px;font-weight:600;padding:8px 13px;cursor:pointer}
+  .miles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip-m{font-size:12px;font-weight:700;padding:7px 11px;border-radius:999px;border:1px solid var(--line);color:var(--txt-soft);background:var(--ink)}
+  .chip-m.on{background:var(--gold);color:#241B05;border-color:var(--gold)}
+  .chip-m.next{border-color:var(--gold);color:var(--gold)}
+  .pbar{height:9px;border-radius:999px;background:var(--ink);overflow:hidden;margin:12px 0 6px}
+  .pbar>i{display:block;height:100%;background:linear-gradient(90deg,#4FB3A6,#E8B04B)}
+  .qrow{padding:13px 0;border-bottom:1px solid var(--line)}
+  .qrow:last-of-type{border-bottom:none}
+  .qtext{font-size:14.5px;color:var(--txt);margin-bottom:10px;line-height:1.4}
+  .scale{display:flex;gap:8px}
+  .sdot{flex:1;max-width:48px;aspect-ratio:1;border-radius:50%;border:1px solid var(--line);background:var(--ink);color:var(--txt-soft);font-weight:700;font-size:13px;cursor:pointer;transition:.12s}
+  .sdot.on{background:var(--gold);color:#241B05;border-color:var(--gold)}
   .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt-dim);font-family:'Inter';font-size:14px;font-weight:600;padding:10px 2px;cursor:pointer;transition:.15s}
   .tab.active{color:var(--txt);border-bottom-color:var(--gold)}
   .tab:hover{color:var(--txt)}
@@ -226,6 +246,7 @@
   </nav>
 
   <section id="view-checkin">
+    <div id="nudgeBar"></div>
     <div class="modes" id="modes"></div>
     <div class="status" id="todayStatus"></div>
     <div class="card" id="wizard"></div>
@@ -445,7 +466,7 @@ async function removeEntry(id){
   _all=_all.filter(x=>x.id!=id);setCache();
   if(supa&&currentUser&&!String(id).startsWith('local-')){try{await supa.from('entries').delete().eq('id',id);}catch{}}
 }
-function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();}
+function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();updateNudges();}
 
 /* ===== WHEEL ===== */
 const CX=360,CY=360,R1=150,R2=250,R3=345,cores=Object.keys(DATA);
@@ -566,7 +587,7 @@ async function saveCheckin(){
   const p=selections[0];
   const e={type:'checkin',mode,core:p.core,secondary:p.secondary||null,tertiary:p.tertiary||null,intensity:draft.intensity,trigger:draft.trigger.trim(),selftalk:draft.selftalk.trim(),physical:draft.physical.trim(),lessons:draft.lessons.trim(),carry:draft.carry.trim(),anchor:draft.anchor.trim(),body:JSON.stringify(selections.map(s=>({core:s.core,secondary:s.secondary||null,tertiary:s.tertiary||null})))};
   await persist(e);toast(UI[lang].saved);
-  step=0;selections=[];draft=blankDraft();renderStatus();renderWizard();
+  step=0;selections=[];draft=blankDraft();renderStatus();renderWizard();updateNudges();
 }
 
 /* ===== JOURNAL ===== */
@@ -910,7 +931,7 @@ document.getElementById('prioAddBtn').onclick=async()=>{
 
 /* ===== SECURE GROUND (attachment tracker) ===== */
 const ATTACH_BASE={anx:7.3,avoid:4.0};
-let secureSub='ground',catchTools=new Set(),catchStopped=true,catchDomain='myself',sgAnx=7.3,sgAvoid=4.0;
+let secureSub='ground',catchTools=new Set(),catchStopped=true,catchDomain='myself',sgAnx=7.3,sgAvoid=4.0,groundAns={};
 function isReading(e){const p=parseBody(e);return!!(p&&p.kind2==='reading');}
 function isSpiral(e){const p=parseBody(e);return!!(p&&p.kind2==='spiral');}
 function isSlip(e){const p=parseBody(e);return!!(p&&p.kind2==='trustslip');}
@@ -943,23 +964,28 @@ function renderSecure(){const b=document.getElementById('secureBody');if(!b)retu
   if(secureSub==='trust')return renderTrust(b,T);
   if(secureSub==='reflect')return renderReflect(b,T);}
 function renderGround(b,T){const rd=readingsArr(),latest=rd[rd.length-1];
+  const qa=T.sgQA,qv=T.sgQV,allQ=qa.map((t,i)=>['a'+i,t]).concat(qv.map((t,i)=>['v'+i,t]));
+  const scale=key=>`<div class="scale">${[1,2,3,4,5].map(n=>`<button class="sdot${groundAns[key]===n?' on':''}" data-k="${key}" data-v="${n}">${n}</button>`).join('')}</div>`;
   b.innerHTML=`<div class="card"><div class="secl">${T.sgStyle}</div>
     <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--gold);margin:2px 0 6px">${T.sgStyleVal}</div>
     <div class="qsub">${T.sgGaugeSub}</div>
     <div class="gaugewrap" style="margin-top:12px">${gaugeSVG()}</div>
     <div class="meta" style="margin-top:10px">${T.sgBaseL}: ${ATTACH_BASE.anx} / ${ATTACH_BASE.avoid}${latest?`  ·  ${T.sgLatest}: ${latest.anx} / ${latest.avoid}`:''}</div></div>
-    <div class="card"><div class="secl">${T.sgLogReadingTitle}</div><div class="qsub" style="margin-bottom:16px">${T.sgLogReadingSub}</div>
-    <div class="slabel"><span>${T.sgAnxL}: <b id="sgAnxV" style="color:var(--gold)">${sgAnx}</b></span><span>${T.sgLowCalm} – ${T.sgHighActiv}</span></div>
-    <input type="range" min="0" max="10" step="0.5" value="${sgAnx}" id="sgAnxR">
-    <div class="slabel" style="margin-top:16px"><span>${T.sgAvoidL}: <b id="sgAvoidV" style="color:var(--gold)">${sgAvoid}</b></span><span>${T.sgLowOpen} – ${T.sgHighWall}</span></div>
-    <input type="range" min="0" max="10" step="0.5" value="${sgAvoid}" id="sgAvoidR">
+    <div class="card"><div class="secl">${T.sgQTitle}</div><div class="qsub" style="margin-bottom:6px">${T.sgQSub}</div>
+    <div class="slabel" style="margin:10px 2px 2px"><span>${T.sgScaleLo}</span><span>${T.sgScaleHi}</span></div>
+    ${allQ.map(q=>`<div class="qrow"><div class="qtext">${q[1]}</div>${scale(q[0])}</div>`).join('')}
     <div class="nav"><button class="btn primary" id="sgSave">${T.sgSaveReading}</button></div></div>
     <div class="card"><div class="secl">${T.sgTargetTitle}</div>
     <div class="qa" style="border:none;padding-left:0;line-height:1.9">• ${T.sgTarget1}<br>• ${T.sgTarget2}<br>• ${T.sgTarget3}<br>• ${T.sgTarget4}</div></div>`;
-  const ar=document.getElementById('sgAnxR'),vr=document.getElementById('sgAvoidR');
-  ar.oninput=()=>{sgAnx=parseFloat(ar.value);document.getElementById('sgAnxV').textContent=sgAnx;};
-  vr.oninput=()=>{sgAvoid=parseFloat(vr.value);document.getElementById('sgAvoidV').textContent=sgAvoid;};
-  document.getElementById('sgSave').onclick=async()=>{await persist({type:'journal',title:'Reading',body:JSON.stringify({kind2:'reading',anx:sgAnx,avoid:sgAvoid})});toast(lang==='es'?'Guardado':'Saved');renderGround(b,T);};}
+  b.querySelectorAll('.sdot').forEach(d=>d.onclick=()=>{const k=d.dataset.k;groundAns[k]=parseInt(d.dataset.v);
+    b.querySelectorAll(`.sdot[data-k="${k}"]`).forEach(x=>x.classList.remove('on'));d.classList.add('on');});
+  document.getElementById('sgSave').onclick=async()=>{const total=qa.length+qv.length;
+    if(Object.keys(groundAns).length<total){toast(T.sgNeedAll);return;}
+    const ak=Object.keys(groundAns).filter(k=>k[0]==='a'),vk=Object.keys(groundAns).filter(k=>k[0]==='v');
+    const am=ak.reduce((x,k)=>x+groundAns[k],0)/ak.length,vm=vk.reduce((x,k)=>x+groundAns[k],0)/vk.length;
+    const anx=Math.round((am-1)/4*100)/10,avoid=Math.round((vm-1)/4*100)/10;
+    await persist({type:'journal',title:'Reading',body:JSON.stringify({kind2:'reading',anx,avoid,src:'quiz'})});
+    groundAns={};toast(lang==='es'?'Guardado':'Saved');renderGround(b,T);};}
 function renderCatch(b,T){const doms=[['myself',T.catchDomMyself],['romantic',T.catchDomRomantic],['kids',T.catchDomKids],['family',T.catchDomFamily],['friends',T.catchDomFriends]];
   const tools=[['goodenough',T.toolGoodEnough],['breath',T.toolBreath],['prayer',T.toolPrayer],['stayed',T.toolStayed],['space',T.toolSpace]];
   b.innerHTML=`<div class="card"><div class="secl">${T.catchTitle}</div><div class="qsub" style="margin-bottom:16px">${T.catchSub}</div>
@@ -997,6 +1023,9 @@ function renderTrust(b,T){const slips=_all.filter(isSlip).sort((a,b)=>new Date(a
   const start=trustStartTs(),days=Math.max(0,Math.floor((Date.now()-start)/86400000));
   const tsArr=slips.map(e=>new Date(e.ts).getTime());let best=days,prev=parseInt(localStorage.getItem('fw.truststart')||Date.now());
   tsArr.forEach(t=>{const gap=Math.floor((t-prev)/86400000);if(gap>best)best=gap;prev=t;});
+  const MILE=[1,7,14,30,60,90,180,270,365],ML={1:T.mile1,7:T.mile7,14:T.mile14,30:T.mile30,60:T.mile60,90:T.mile90,180:T.mile180,270:T.mile270,365:T.mile365};
+  const nextMile=MILE.find(m=>days<m),pct=Math.min(100,Math.round(days/365*100));
+  const milesHTML=MILE.map(m=>`<span class="chip-m ${best>=m?'on':(m===nextMile?'next':'')}">${ML[m]}</span>`).join('');
   b.innerHTML=`<div class="card" style="text-align:center;padding:26px 18px"><div class="secl" style="margin-bottom:14px">${T.trustTitle}</div>
     <div class="bignum">${days}</div><div class="meta" style="justify-content:center;margin-top:8px">${days===1?T.trustDay:T.trustDays}</div>
     <div style="display:flex;justify-content:center;gap:30px;margin-top:18px">
@@ -1004,7 +1033,7 @@ function renderTrust(b,T){const slips=_all.filter(isSlip).sort((a,b)=>new Date(a
       <div><div style="font-size:20px;font-weight:700;color:var(--txt)">${slips.length}</div><div class="meta" style="justify-content:center">${T.trustSlips}</div></div></div></div>
     <div class="card"><div class="qa" style="border:none;padding-left:0;color:var(--gold);font-size:15px">${T.trustSoothe}</div>
     <div class="qsub" style="margin-top:10px">${T.trustSub}</div>
-    <div id="slipArea" style="margin-top:16px"><button class="btn ghost" id="slipBtn">${T.trustSlipBtn}</button></div></div>`;
+    <div id="slipArea" style="margin-top:16px"><button class="btn ghost" id="slipBtn">${T.trustSlipBtn}</button></div></div><div class="card"><div class="secl">${T.trustMiles}</div><div class="qsub" style="margin:6px 0 4px">${T.trustYear}</div><div class="pbar"><i style="width:${pct}%"></i></div><div class="meta">${days} / 365 ${T.trustProgress}${nextMile?`  ·  ${T.trustNext}: ${ML[nextMile]} (${nextMile-days} ${T.trustToGo})`:``}</div><div class="miles">${milesHTML}</div></div>`;
   document.getElementById('slipBtn').onclick=()=>{const area=document.getElementById('slipArea');const trigs=[['gone',T.trustTrigGone],['eve',T.trustTrigEve],['anx',T.trustTrigAnx],['habit',T.trustTrigHabit]];
     area.innerHTML=`<div class="qsub" style="margin-bottom:12px">${T.trustSlipQ}</div>${trigs.map(t=>`<button class="btn ghost slipt" data-t="${t[0]}" style="display:block;width:100%;margin-bottom:8px">${t[1]}</button>`).join('')}`;
     area.querySelectorAll('.slipt').forEach(btn=>btn.onclick=async()=>{await persist({type:'journal',title:'Checked',body:JSON.stringify({kind2:'trustslip',trigger:btn.dataset.t})});localStorage.setItem('fw.truststart',Date.now().toString());toast(T.trustLogged);renderTrust(b,T);});};}
@@ -1019,15 +1048,36 @@ function renderReflect(b,T){const existing=todaysReflect(),p=existing?(parseBody
     <div class="fld" style="color:#4FB3A6;margin-top:18px;margin-bottom:2px">${T.reflectDos}</div>
     <div id="reflectDos">${dos.map(d=>row(d[0],d[1],p.dos)).join('')}</div>
     <label class="chk" style="margin-top:16px;border:none"><input type="checkbox" id="reflectReg" ${p.regulated?'checked':''}><span style="color:var(--gold);font-weight:600">${T.reflectReg}</span></label>
-    <div class="nav"><button class="btn primary" id="reflectSaveBtn">${T.reflectSave}</button></div></div>`;
+    <div class="nav"><button class="btn primary" id="reflectSaveBtn">${T.reflectSave}</button></div><div style="margin-top:16px;border-top:1px solid var(--line);padding-top:16px"><button class="btn ghost" id="reflectRemindBtn" style="width:100%">${T.reflectRemind}</button><div class="qsub" style="margin-top:8px;font-size:12px">${T.reflectRemindNote}</div></div></div>`;
   document.getElementById('reflectSaveBtn').onclick=async()=>{const dn={},dz={};
     document.querySelectorAll('#reflectDonts input').forEach(i=>dn[i.dataset.k]=i.checked);
     document.querySelectorAll('#reflectDos input').forEach(i=>dz[i.dataset.k]=i.checked);
     const body={kind2:'reflect',date:todayKey(),donts:dn,dos:dz,regulated:document.getElementById('reflectReg').checked};
     if(existing){await updateBody(existing,body);}else{await persist({type:'journal',title:'Reflection',body:JSON.stringify(body)});}
-    toast(T.reflectSaved);renderReflect(b,T);};}
+    toast(T.reflectSaved);renderReflect(b,T);updateNudges();};const rr=document.getElementById('reflectRemindBtn');if(rr)rr.onclick=()=>{downloadDailyICS(T.reflectReminderTitle,20,0);toast(lang==='es'?'Recordatorio agregado':'Reminder added');};}
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();
+/* ===== DAILY NUDGES ===== */
+function downloadDailyICS(title,hour,min){const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const dtstart=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}T${pad(hour)}${pad(min||0)}00`;
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';const esc2=x=>(x||'').replace(/([,;\\])/g,'\\$1');
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FeelingWheel//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:fw-daily-'+Date.now()+'@feelingwheel','DTSTAMP:'+stamp,'DTSTART:'+dtstart,'DURATION:PT15M','RRULE:FREQ=DAILY','SUMMARY:'+esc2(title),'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:'+esc2(title),'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const bl=new Blob([ics],{type:'text/calendar'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download='daily-reflection.ics';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function pendingToday(){const T=UI[lang],out=[],today=new Date().toDateString();
+  if(!todaysReflect())out.push({k:'reflect',label:T.ndReflect,tab:'secure',sub:'reflect'});
+  if(!_all.some(e=>e.type==='checkin'&&new Date(e.ts).toDateString()===today))out.push({k:'checkin',label:T.ndCheckin,tab:'checkin'});
+  return out;}
+function goTab(tab,sub){const btn=document.querySelector('.tab[data-tab="'+tab+'"]');if(btn)btn.click();
+  if(tab==='secure'&&sub){secureSub=sub;const ss=document.getElementById('secureSub');if(ss)ss.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x.dataset.sub===sub));renderSecure();}}
+function updateNudges(){if(typeof todaysReflect!=='function')return;const pend=pendingToday(),any=pend.length>0,T=UI[lang];
+  const hb=document.getElementById('hambBtn');if(hb)hb.classList.toggle('alert',any);
+  const sec=document.getElementById('tabSecure');if(sec)sec.classList.toggle('alert',pend.some(p=>p.k==='reflect'));
+  const chk=document.getElementById('tabCheck');if(chk)chk.classList.toggle('alert',pend.some(p=>p.k==='checkin'));
+  const bar=document.getElementById('nudgeBar');if(bar){
+    if(!any){bar.innerHTML='';}
+    else{bar.innerHTML=`<div class="nudge"><div class="nudge-h">💬 ${T.ndTitle}</div><div class="nudge-items">${pend.map(p=>`<button class="nudge-chip" data-tab="${p.tab}" data-sub="${p.sub||''}">${p.label} →</button>`).join('')}</div></div>`;
+      bar.querySelectorAll('.nudge-chip').forEach(c=>c.onclick=()=>goTab(c.dataset.tab,c.dataset.sub||''));}}}
+
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();renderPriorities();renderSecure();updateNudges();
 if(window.supabase&&window.supabase.createClient){
   supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   supa.auth.getSession().then(({data})=>handleSession(data.session));
