@@ -1085,15 +1085,18 @@ function trustStartTs(){const slips=_all.filter(isSlip).sort((a,b)=>new Date(b.t
   if(manual==null)manual=Date.now();
   return Math.max(lastSlip,manual);}
 function renderTrust(b,T){const slips=_all.filter(isSlip).sort((a,b)=>new Date(a.ts)-new Date(b.ts));
-  const start=trustStartTs(),days=Math.max(0,Math.floor((Date.now()-start)/86400000));
+  const start=trustStartTs();const _sM=new Date(localISO(start)+'T00:00:00').getTime(),_tM=new Date(localISO(Date.now())+'T00:00:00').getTime();const days=Math.max(0,Math.floor((_tM-_sM)/86400000)+1);
   const startISO=localISO(start),todayISO=localISO(Date.now());
   const tsArr=slips.map(e=>new Date(e.ts).getTime());let best=days;const _tse=trustStartEntry();let prev=null;if(_tse){const _p=parseBody(_tse)||{};if(_p.start)prev=new Date(_p.start+'T00:00:00').getTime();}if(prev==null)prev=tsArr.length?tsArr[0]:Date.now();
   tsArr.forEach(t=>{const gap=Math.floor((t-prev)/86400000);if(gap>best)best=gap;prev=t;});
   const MILE=[1,7,14,30,60,90,180,270,365],ML={1:T.mile1,7:T.mile7,14:T.mile14,30:T.mile30,60:T.mile60,90:T.mile90,180:T.mile180,270:T.mile270,365:T.mile365};
   const nextMile=MILE.find(m=>days<m),pct=Math.min(100,Math.round(days/365*100));
+  const _passed=MILE.filter(m=>days>=m),prevMile=_passed.length?_passed[_passed.length-1]:0;
+  const frac=nextMile?Math.min(1,Math.max(0,(days-prevMile)/(nextMile-prevMile))):1;const RC=2*Math.PI*86,roff=RC*(1-frac);
   const milesHTML=MILE.map(m=>`<span class="chip-m ${best>=m?'on':(m===nextMile?'next':'')}">${ML[m]}</span>`).join('');
   b.innerHTML=`<div class="card" style="text-align:center;padding:26px 18px"><div class="secl" style="margin-bottom:14px">${T.trustTitle}</div>
-    <div class="bignum">${days}</div><div class="meta" style="justify-content:center;margin-top:8px">${days===1?T.trustDay:T.trustDays}</div>
+    <svg viewBox="0 0 200 200" width="186" height="186" style="margin:4px auto 0;display:block"><circle cx="100" cy="100" r="86" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/><circle cx="100" cy="100" r="86" fill="none" style="stroke:var(--gold)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${RC.toFixed(1)}" stroke-dashoffset="${roff.toFixed(1)}" transform="rotate(-90 100 100)"/><text x="100" y="98" text-anchor="middle" font-size="58" font-family="Fraunces,Georgia,serif" font-weight="600" style="fill:var(--gold)">${days}</text><text x="100" y="128" text-anchor="middle" font-size="13" fill="#8a93a8" letter-spacing="1.5">${(days===1?T.trustDay:T.trustDays).toUpperCase()}</text></svg>
+    <div class="meta" style="justify-content:center;margin-top:8px">${nextMile?`${nextMile-days} ${T.trustToGo} → ${ML[nextMile]}`:`🎉 ${ML[365]}`}</div>
     <div style="display:flex;justify-content:center;gap:30px;margin-top:18px">
       <div><div style="font-size:20px;font-weight:700;color:var(--txt)">${best}</div><div class="meta" style="justify-content:center">${T.trustBest}</div></div>
       <div><div style="font-size:20px;font-weight:700;color:var(--txt)">${slips.length}</div><div class="meta" style="justify-content:center">${T.trustSlips}</div></div></div>${slips.length?`<div style="text-align:center;margin-top:16px"><button class="skip" id="undoSlipBtn">${T.trustUndo}</button></div>`:``}<div style="margin-top:18px;text-align:left"><label class="fld">${T.trustStarted}</label><input type="date" id="trustStartInput" value="${startISO}" max="${todayISO}"></div></div>
