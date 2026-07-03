@@ -548,7 +548,9 @@ function toggleSel(s){const i=selections.findIndex(x=>sameSel(x,s));if(i>=0)sele
 function chipHTML(s){return`<span class="schip"><span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:${DATA[s.core].color}"></span>${leaf(s)}</span>`;}
 function feelingsOf(e){if(e.type==='checkin'&&e.body){try{const arr=JSON.parse(e.body);if(Array.isArray(arr)&&arr.length)return arr;}catch{}}if(e.core)return[{core:e.core,secondary:e.secondary,tertiary:e.tertiary}];return[];}
 const VALENCE={Happy:1,Surprised:0.5,Bad:0,Fearful:0,Angry:0,Disgusted:0,Sad:0};
-function moodScore(feels){if(!feels||!feels.length)return null;const sum=feels.reduce((a,f)=>a+(VALENCE[f.core]??0.5),0);return Math.round(sum/feels.length*100);}
+/* split the mixed "Surprised" branch: positive surprises are light, negative are heavy */
+const SECVAL={"Amazed":1,"Excited":1,"Startled":0,"Confused":0};
+function moodScore(feels){if(!feels||!feels.length)return null;const val=f=>(f.secondary&&SECVAL[f.secondary]!=null)?SECVAL[f.secondary]:(VALENCE[f.core]??0.5);const sum=feels.reduce((a,f)=>a+val(f),0);return Math.round(sum/feels.length*100);}
 function zone(pct){if(pct>=67)return{en:'Light',es:'Ligero',col:'#E0A458'};if(pct>=34)return{en:'Mixed',es:'Mixto',col:'#C9A24B'};return{en:'Heavy',es:'Pesado',col:'#5A78C4'};}
 function thermoHTML(pct,label){if(pct==null)return'';const z=zone(pct),zl=lang==='es'?z.es:z.en;
   return`<div class="thermo"><div class="thermo-top"><span>${label||''}</span><span class="thermo-val" style="color:${z.col}">${zl} · ${pct}%</span></div>
