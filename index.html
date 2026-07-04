@@ -198,7 +198,7 @@
   @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 
 #printArea{display:none}
-@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{display:block;position:absolute;left:0;top:0;width:100%}}
+@media print{html,body{background:#fff !important;margin:0 !important;padding:0 !important}#app,.fab,#scrim,#drawer,#hambBtn{display:none !important}#printArea{display:block !important;background:#fff;color:#111}#printArea *{color:#111 !important;background:transparent !important;box-shadow:none !important;text-shadow:none !important}.rpt-meta{color:#555 !important}.rpt-sub{color:#666 !important}@page{margin:14mm}}
 </style>
 </head>
 <body>
@@ -671,11 +671,11 @@ function buildPrintReport(from,to){const T=UI[lang];
   const ck=checkins().filter(e=>{const d=localISO(e.ts);return(!from||d>=from)&&(!to||d<=to);}).sort((a,b)=>new Date(a.ts)-new Date(b.ts));
   const area=document.getElementById('printArea');if(!area)return;
   const modeLbl=m=>({morning:T.modeM,evening:T.modeE,moment:T.modeI}[m]||'');
-  const line=(l,v)=>v?`<p style="margin:2px 0 2px">${l} ${esc(v)}</p>`:'';
+  const line=(l,v)=>v?`<div style="margin:5px 0;font-size:13px;line-height:1.45"><span style="font-weight:600">${l}</span> ${esc(v)}</div>`:'';
   const rows=ck.map(e=>{const d=new Date(e.ts),fl=feelingsOf(e),paths=fl.map(f=>pathStr(f)).join('; ');
     const ms=moodScore(fl),z=ms!=null?zone(ms):null;
-    return`<div style="margin:0 0 12px;padding:0 0 10px;border-bottom:1px solid #ccc"><p style="margin:0 0 3px;font-weight:700;font-size:14px">${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}${modeLbl(e.mode)?` — ${modeLbl(e.mode)}`:''}</p><p style="margin:0 0 4px;color:#333">${esc(paths)||'—'}${e.intensity?` · ${e.intensity}/10`:''}${ms!=null?` · ${lang==='es'?z.es:z.en} ${ms}%`:''}</p>${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}</div>`;}).join('');
-  area.innerHTML=`<div style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:22px 20px"><h1 style="font-size:22px;margin:0 0 4px">Feeling Wheel — ${lang==='es'?'Reporte':'Report'}</h1><p style="margin:0 0 2px;color:#444;font-size:13px">${from||'…'} → ${to||'…'} · ${ck.length} ${lang==='es'?'registros':'check-ins'}</p><p style="margin:0 0 16px;color:#999;font-size:11px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</p>${ck.length?rows:`<p style="color:#666">${lang==='es'?'No hay registros en ese rango.':'No check-ins in that range.'}</p>`}</div>`;}
+    return`<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 16px;padding:0 0 14px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:15px">${d.toLocaleDateString()} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}${modeLbl(e.mode)?`  ·  ${modeLbl(e.mode)}`:''}</div><div class="rpt-meta" style="margin:5px 0 9px;font-size:12.5px">${esc(paths)||'—'}${e.intensity?` · ${e.intensity}/10`:''}${ms!=null?` · ${lang==='es'?z.es:z.en} ${ms}%`:''}</div>${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}</div>`;}).join('');
+  area.innerHTML=`<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:6px 2px;max-width:720px;margin:0 auto"><div style="border-bottom:2px solid #111;padding-bottom:11px;margin-bottom:18px"><div style="font-size:23px;font-weight:800;letter-spacing:-.3px">Feeling Wheel ${lang==='es'?'— Reporte':'— Report'}</div><div class="rpt-sub" style="font-size:12.5px;margin-top:5px">${from||'…'} → ${to||'…'} · ${ck.length} ${lang==='es'?'registros':'check-ins'}</div><div class="rpt-sub" style="font-size:11px;margin-top:2px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</div></div>${ck.length?rows:`<p style="color:#666">${lang==='es'?'No hay registros en ese rango.':'No check-ins in that range.'}</p>`}</div>`;}
 function renderHistory(){
   const T=UI[lang],ck=checkins();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
