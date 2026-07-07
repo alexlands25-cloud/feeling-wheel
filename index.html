@@ -337,7 +337,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 18 · 2026-07-05</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 19 · 2026-07-05</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -678,19 +678,26 @@ function entryCardHTML(e,T){const d=new Date(e.ts),dt=`${d.toLocaleDateString()}
   const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
   return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}<button class="del" data-id="${e.id}">delete</button></div>`;}
 function buildPrintReport(from,to,opts){const T=UI[lang];opts=opts||{feel:true,journ:true};
+  if(from&&to&&from>to){const _t=from;from=to;to=_t;}
   const inR=e=>{const d=localISO(e.ts);return(!from||d>=from)&&(!to||d<=to);};
   let items=[];
   if(opts.feel)items=items.concat(checkins().filter(inR).map(e=>({e,k:'c'})));
   if(opts.journ)items=items.concat(journals().filter(inR).map(e=>({e,k:'j'})));
   items.sort((a,b)=>new Date(a.e.ts)-new Date(b.e.ts));
   const area=document.getElementById('printArea');if(!area)return;
+  const loc=lang==='es'?'es-ES':'en-US';
   const modeLbl=m=>({morning:T.modeM,evening:T.modeE,moment:T.modeI}[m]||'');
-  const line=(l,v)=>v?`<div style="margin:5px 0;font-size:13px;line-height:1.45"><span style="font-weight:600">${l}</span> ${esc(v)}</div>`:'';
-  const rows=items.map(({e,k})=>{const d=new Date(e.ts),dt=`${d.toLocaleDateString()} \u00b7 ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
-    if(k==='j'){return`<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 16px;padding:0 0 14px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:15px">${dt}  \u00b7  ${lang==='es'?'Diario':'Journal'}</div>${e.title?`<div style="font-weight:600;margin:4px 0 3px">${esc(e.title)}</div>`:''}<div style="font-size:13px;line-height:1.5;white-space:pre-wrap">${esc(e.body||'')}</div></div>`;}
+  const line=(l,v)=>v?`<div style="margin:4px 0;font-size:13px;line-height:1.45"><span style="font-weight:600">${l}</span> ${esc(v)}</div>`:'';
+  const entryHTML=({e,k})=>{const d=new Date(e.ts),tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    if(k==='j')return `<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:13.5px">${tm} \u00b7 ${lang==='es'?'Diario':'Journal'}${e.title?' \u00b7 '+esc(e.title):''}</div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap;margin-top:3px">${esc(e.body||'')}</div></div>`;
     const fl=feelingsOf(e),paths=fl.map(f=>pathStr(f)).join('; '),ms=moodScore(fl),z=ms!=null?zone(ms):null;
-    return`<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 16px;padding:0 0 14px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:15px">${dt}${modeLbl(e.mode)?`  \u00b7  ${modeLbl(e.mode)}`:''}</div><div class="rpt-meta" style="margin:5px 0 9px;font-size:12.5px">${esc(paths)||'\u2014'}${e.intensity?` \u00b7 ${e.intensity}/10`:''}${ms!=null?` \u00b7 ${lang==='es'?z.es:z.en} ${ms}%`:''}</div>${line(T.needsL,needsOf(e))}${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}</div>`;}).join('');
-  area.innerHTML=`<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:6px 2px;max-width:720px;margin:0 auto"><div style="border-bottom:2px solid #111;padding-bottom:11px;margin-bottom:18px"><div style="font-size:23px;font-weight:800;letter-spacing:-.3px">Feeling Wheel ${lang==='es'?'\u2014 Reporte':'\u2014 Report'}</div><div class="rpt-sub" style="font-size:12.5px;margin-top:5px">${from||'\u2026'} \u2192 ${to||'\u2026'} \u00b7 ${items.length} ${lang==='es'?'entradas':'entries'}</div><div class="rpt-sub" style="font-size:11px;margin-top:2px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</div></div>${items.length?rows:`<p style="color:#666">${lang==='es'?'Nada en ese rango.':'Nothing in that range.'}</p>`}</div>`;}
+    return `<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:13.5px">${tm}${modeLbl(e.mode)?' \u00b7 '+modeLbl(e.mode):''} \u00b7 ${lang==='es'?'Emociones':'Feeling wheel'}</div><div class="rpt-meta" style="margin:4px 0 8px;font-size:12.5px">${esc(paths)||'\u2014'}${e.intensity?' \u00b7 '+e.intensity+'/10':''}${ms!=null?' \u00b7 '+(lang==='es'?z.es:z.en)+' '+ms+'%':''}</div>${line(T.needsL,needsOf(e))}${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}</div>`;};
+  const byDay={};items.forEach(it=>{const dk=localISO(it.e.ts);(byDay[dk]=byDay[dk]||[]).push(it);});
+  const days=Object.keys(byDay).sort();
+  const body=days.map(dk=>{const hdr=new Date(dk+'T00:00:00').toLocaleDateString(loc,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    return `<div style="break-after:avoid;page-break-after:avoid;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid #000;padding-bottom:4px;margin:20px 0 11px">${hdr}</div>`+byDay[dk].map(entryHTML).join('');}).join('');
+  const rangeTxt=(from||'\u2026')+' \u2192 '+(to||'\u2026');
+  area.innerHTML=`<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:6px 2px;max-width:720px;margin:0 auto"><div style="border-bottom:2px solid #111;padding-bottom:11px;margin-bottom:6px"><div style="font-size:22px;font-weight:800;letter-spacing:-.3px">Feeling Wheel ${lang==='es'?'\u2014 Reporte':'\u2014 Report'}</div><div class="rpt-sub" style="font-size:12.5px;margin-top:5px">${rangeTxt} \u00b7 ${items.length} ${lang==='es'?'entradas':'entries'}</div><div class="rpt-sub" style="font-size:11px;margin-top:2px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</div></div>${items.length?body:`<p style="color:#666;margin-top:16px">${lang==='es'?'Nada en ese rango.':'Nothing in that range.'}</p>`}</div>`;}
 function renderHistory(){
   const T=UI[lang],ck=checkins();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -710,7 +717,7 @@ function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'
 
 /* export / import */
 document.getElementById('exportBtn').onclick=()=>{const data={version:3,exported:new Date().toISOString(),checkins:checkins(),journals:journals()};const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='feeling-wheel-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);};
-(function(){const rf=document.getElementById('rFrom'),rt=document.getElementById('rTo'),t=localISO(Date.now());if(rf&&!rf.value)rf.value=t;if(rt&&!rt.value)rt.value=t;const tog=id=>{const b=document.getElementById(id);if(b)b.onclick=()=>b.classList.toggle('on');};tog('incFeel');tog('incJourn');const pb=document.getElementById('printBtn');if(pb)pb.onclick=()=>{const fB=document.getElementById('incFeel'),jB=document.getElementById('incJourn');const opts={feel:!fB||fB.classList.contains('on'),journ:!!jB&&jB.classList.contains('on')};if(!opts.feel&&!opts.journ){toast(lang==='es'?'Elige al menos uno':'Pick at least one');return;}buildPrintReport(rf?rf.value:'',rt?rt.value:'',opts);document.body.classList.add('printing-report');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('printing-report'),600);},80);};})();
+(function(){const rf=document.getElementById('rFrom'),rt=document.getElementById('rTo'),t=localISO(Date.now());if(rf&&!rf.value)rf.value=t;if(rt&&!rt.value)rt.value=t;const tog=id=>{const b=document.getElementById(id);if(b)b.onclick=()=>b.classList.toggle('on');};tog('incFeel');tog('incJourn');const pb=document.getElementById('printBtn');if(pb)pb.onclick=()=>{const fB=document.getElementById('incFeel'),jB=document.getElementById('incJourn');const opts={feel:!fB||fB.classList.contains('on'),journ:!!jB&&jB.classList.contains('on')};if(!opts.feel&&!opts.journ){toast(lang==='es'?'Elige al menos uno':'Pick at least one');return;}buildPrintReport(rf?rf.value:'',rt?rt.value:'',opts);document.body.classList.add('printing-report');const _cl=()=>{document.body.classList.remove('printing-report');window.removeEventListener('afterprint',_cl);};window.addEventListener('afterprint',_cl);setTimeout(()=>window.print(),150);};})();
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=async()=>{try{const d=JSON.parse(r.result);const incoming=[...(d.checkins||[]),...(d.journals||[])];
