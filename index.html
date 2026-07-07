@@ -337,7 +337,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 20 · 2026-07-05</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 21 · 2026-07-05</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -677,6 +677,13 @@ function entryCardHTML(e,T){const d=new Date(e.ts),dt=`${d.toLocaleDateString()}
   const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
   const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
   return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}<button class="del" data-id="${e.id}">delete</button></div>`;}
+let lastReportHTML='';
+function printReportIframe(){if(!lastReportHTML)return;
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{margin:14mm}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+lastReportHTML+'</body></html>';
+  let ifr=document.getElementById('printFrame');if(ifr)ifr.remove();
+  ifr=document.createElement('iframe');ifr.id='printFrame';ifr.setAttribute('style','position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0');
+  document.body.appendChild(ifr);const w=ifr.contentWindow,d=w.document;d.open();d.write(doc);d.close();
+  const go=()=>{try{w.focus();w.print();}catch(e){}};ifr.onload=go;setTimeout(go,400);}
 function buildPrintReport(from,to,opts){const T=UI[lang];opts=opts||{feel:true,journ:true};
   if(from&&to&&from>to){const _t=from;from=to;to=_t;}
   const inR=e=>{const d=localISO(e.ts);return(!from||d>=from)&&(!to||d<=to);};
@@ -697,7 +704,7 @@ function buildPrintReport(from,to,opts){const T=UI[lang];opts=opts||{feel:true,j
   const body=days.map(dk=>{const hdr=new Date(dk+'T00:00:00').toLocaleDateString(loc,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     return `<div style="break-after:avoid;page-break-after:avoid;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid #000;padding-bottom:4px;margin:20px 0 11px">${hdr}</div>`+byDay[dk].map(entryHTML).join('');}).join('');
   const rangeTxt=(from||'\u2026')+' \u2192 '+(to||'\u2026');
-  const reportHTML=`<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:16px 18px 60px;max-width:720px;margin:0 auto"><div style="border-bottom:2px solid #111;padding-bottom:11px;margin-bottom:6px"><div style="font-size:22px;font-weight:800;letter-spacing:-.3px">Feeling Wheel ${lang==='es'?'\u2014 Reporte':'\u2014 Report'}</div><div class="rpt-sub" style="font-size:12.5px;margin-top:5px">${rangeTxt} \u00b7 ${items.length} ${lang==='es'?'entradas':'entries'}</div><div class="rpt-sub" style="font-size:11px;margin-top:2px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</div></div>${items.length?body:`<p style="color:#666;margin-top:16px">${lang==='es'?'Nada en ese rango.':'Nothing in that range.'}</p>`}</div>`;area.innerHTML='<div class="rpt-toolbar"><button id="rptPrint">'+(lang==='es'?'\ud83d\udda8 Guardar PDF':'\ud83d\udda8 Save PDF')+'</button><button id="rptClose" class="sec">'+(lang==='es'?'Cerrar':'Close')+'</button></div>'+reportHTML;var _rp=document.getElementById('rptPrint');if(_rp)_rp.onclick=function(){window.print();};var _rc=document.getElementById('rptClose');if(_rc)_rc.onclick=function(){document.body.classList.remove('report-open');area.innerHTML='';};}
+  const reportHTML=`<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:16px 18px 60px;max-width:720px;margin:0 auto"><div style="border-bottom:2px solid #111;padding-bottom:11px;margin-bottom:6px"><div style="font-size:22px;font-weight:800;letter-spacing:-.3px">Feeling Wheel ${lang==='es'?'\u2014 Reporte':'\u2014 Report'}</div><div class="rpt-sub" style="font-size:12.5px;margin-top:5px">${rangeTxt} \u00b7 ${items.length} ${lang==='es'?'entradas':'entries'}</div><div class="rpt-sub" style="font-size:11px;margin-top:2px">${lang==='es'?'Generado':'Generated'} ${new Date().toLocaleString()}</div></div>${items.length?body:`<p style="color:#666;margin-top:16px">${lang==='es'?'Nada en ese rango.':'Nothing in that range.'}</p>`}</div>`;lastReportHTML=reportHTML;area.innerHTML='<div class="rpt-toolbar"><button id="rptPrint">'+(lang==='es'?'\ud83d\udda8 Guardar PDF':'\ud83d\udda8 Save PDF')+'</button><button id="rptClose" class="sec">'+(lang==='es'?'Cerrar':'Close')+'</button></div>'+reportHTML;var _rp=document.getElementById('rptPrint');if(_rp)_rp.onclick=function(){printReportIframe();};var _rc=document.getElementById('rptClose');if(_rc)_rc.onclick=function(){document.body.classList.remove('report-open');area.innerHTML='';};}
 function renderHistory(){
   const T=UI[lang],ck=checkins();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
