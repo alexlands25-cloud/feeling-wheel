@@ -243,6 +243,7 @@
   <nav class="drawer" id="drawer">
     <div class="drawer-h">Feeling Wheel</div>
     <button class="tab ditem active" data-tab="checkin" id="tabCheck">Check in</button>
+    <button class="tab ditem" data-tab="plan" id="tabPlan">Daily Plan</button>
     <button class="tab ditem" data-tab="prio" id="tabPrio">Priorities</button>
     <button class="tab ditem" data-tab="secure" id="tabSecure">Secure Ground</button>
     <button class="tab ditem" data-tab="truths" id="tabTruths">My Worth</button>
@@ -299,6 +300,8 @@
     <div id="secureBody"></div>
   </section>
 
+  <section id="view-plan" class="hidden"><div id="planBody"></div></section>
+
   <section id="view-why" class="hidden"><div id="whyBody"></div></section>
 
   <section id="view-truths" class="hidden">
@@ -337,7 +340,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 21 · 2026-07-05</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 22 · 2026-07-05</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -390,7 +393,7 @@ const UI={
    selftalk:"Self-talk — what were you telling yourself?",selftalkP:"The story running in your head…",
    physical:"Physical reactions — what showed up in your body?",physicalP:"Chest, jaw, stomach, hands, breath…",
    lessons:"Lessons learned — what did you notice?",lessonsP:"One thing this is teaching you…",
-   carry:"What do I want to carry into today?",carryP:"A word, an intention, a posture…",
+   carry:"What do I want to carry into today?",planTab:"Daily Plan",planTitle:"Daily Pattern Plan",planSub:"Your morning trigger, three checkpoints, and evening review.",planMornL:"Morning practice — my cue to start",planMornDoL:"What I will do",planTimeL:"Time",planCpL:"Three daytime checkpoints",planCp1:"Checkpoint 1 (time and cue)",planCp2:"Checkpoint 2 (time and cue)",planCp3:"Checkpoint 3 (time and cue)",planEveL:"Evening review — time",planEveDoL:"What I will review",planSave:"Save my plan",planEdit:"Edit plan",planTodayL:"Today's checkpoints",planDone:"done",predictQ:"What could trigger me today?",predictSub:"Review your day — which patterns are most likely to activate?",predictP:"e.g. a call with her, a slow moment at the office…",predictL:"Predicted triggers",intentQ:"My intention for pattern awareness",intentP:"e.g. I'll catch it early and breathe before I react",intentL:"Intention",revPatQ:"Which patterns activated today?",revPatP:"e.g. checking urge, spiral about her silence",revPatL:"Patterns activated",revSpeedQ:"How quickly did I recognize them?",revSpeedP:"e.g. within 5 minutes / not until later",revSpeedL:"Recognition speed",revSigQ:"What were the earliest signals I noticed?",revSigP:"e.g. tight chest, checking my phone",revSigL:"Earliest signals",revTomQ:"What will I do differently tomorrow?",revTomP:"e.g. pause before I reply",revTomL:"Tomorrow",carryP:"A word, an intention, a posture…",
    anchor:"Anchor from your Bible journal (verse or word)",anchorP:"e.g. Philippians 4:6–7…",needsQ:"What do I need today?",needsSub:"Name the need under the feeling — what would help you feel met.",needsP:"In my own words…",needsL:"Needs",
    jnew:"New journal entry",jsub:"Title it, write freely. Saved the second you hit save.",jtitle:"Title",jnotes:"Notes",
    jtitleP:"Give it a name…",jnotesP:"Whatever's on your mind today…",jsave:"Save entry",jpast:"Past entries",jsaved:"Entry saved",jnone:"No journal entries yet.",
@@ -412,7 +415,7 @@ const UI={
    selftalk:"Diálogo interno — ¿qué te estabas diciendo?",selftalkP:"La historia en tu cabeza…",
    physical:"Reacciones físicas — ¿qué apareció en tu cuerpo?",physicalP:"Pecho, mandíbula, estómago, manos, respiración…",
    lessons:"Lecciones — ¿qué notaste?",lessonsP:"Una cosa que esto te enseña…",
-   carry:"¿Qué quiero llevar conmigo hoy?",carryP:"Una palabra, una intención, una postura…",
+   carry:"¿Qué quiero llevar conmigo hoy?",planTab:"Plan Diario",planTitle:"Plan Diario de Patrones",planSub:"Tu señal de la mañana, tres puntos de control y la revisión de la noche.",planMornL:"Práctica de la mañana — mi señal para empezar",planMornDoL:"Qué voy a hacer",planTimeL:"Hora",planCpL:"Tres puntos de control del día",planCp1:"Punto 1 (hora y señal)",planCp2:"Punto 2 (hora y señal)",planCp3:"Punto 3 (hora y señal)",planEveL:"Revisión de la noche — hora",planEveDoL:"Qué voy a revisar",planSave:"Guardar mi plan",planEdit:"Editar plan",planTodayL:"Puntos de control de hoy",planDone:"hechos",predictQ:"¿Qué podría activarme hoy?",predictSub:"Revisa tu día — ¿qué patrones son más probables?",predictP:"ej. una llamada con ella, un momento lento en la oficina…",predictL:"Disparadores previstos",intentQ:"Mi intención de conciencia",intentP:"ej. lo detecto temprano y respiro antes de reaccionar",intentL:"Intención",revPatQ:"¿Qué patrones se activaron hoy?",revPatP:"ej. ganas de revisar, espiral por su silencio",revPatL:"Patrones activados",revSpeedQ:"¿Qué tan rápido los reconocí?",revSpeedP:"ej. en 5 minutos / hasta más tarde",revSpeedL:"Velocidad de reconocimiento",revSigQ:"¿Cuáles fueron las primeras señales?",revSigP:"ej. pecho apretado, revisar el teléfono",revSigL:"Primeras señales",revTomQ:"¿Qué haré diferente mañana?",revTomP:"ej. pausar antes de responder",revTomL:"Mañana",carryP:"Una palabra, una intención, una postura…",
    anchor:"Ancla de tu diario bíblico (versículo o palabra)",anchorP:"ej. Filipenses 4:6–7…",needsQ:"¿Qué necesito hoy?",needsSub:"Nombra la necesidad debajo de la emoción — lo que te ayudaría a sentirte atendido.",needsP:"En mis palabras…",needsL:"Necesidades",
    jnew:"Nueva entrada de diario",jsub:"Ponle título, escribe libremente. Se guarda al instante.",jtitle:"Título",jnotes:"Notas",
    jtitleP:"Dale un nombre…",jnotesP:"Lo que tengas en mente hoy…",jsave:"Guardar entrada",jpast:"Entradas anteriores",jsaved:"Entrada guardada",jnone:"Aún no hay entradas de diario.",
@@ -422,7 +425,7 @@ const UI={
    needfeeling:"Primero elige una emoción en la rueda.",syncing:"Sincronizando…",connect:"Conectar",cTitle:"Hablarlo",cSub:"Antes de hablarlo con ella, ten claridad. Casi toda pelea corre sobre una suposición de lo que ella piensa — y no puedes estar en su cabeza. Separa lo que SABES de lo que SUPONES.",cSituation:"¿Qué pasó?",cSituationS:"Solo los hechos — lo que vería una cámara.",cSituationP:"Ella dijo… / Llegué y…",cLoop:"Tu bucle",cLoopS:"Lo que se activó dentro de ti.",cPerceptionL:"Qué interpreté",cEmotionL:"Qué sentí",cResponseL:"Qué hice, o quise hacer",cUnknown:"Marca lo desconocido",cUnknownS:"Este es clave. Separa lo real de lo que supones.",cKnowL:"Lo que realmente SÉ (ella dijo / hizo)",cThinkL:"Lo que CREO que le pasa a ella",cGuessL:"Lo que SUPONGO (puede estar mal)",cOff:"La salida",cOffS:"Un movimiento más verdadero ahora.",cBetterL:"Una mejor respuesta ahora",cSayL:"Con qué frase voy a empezar — una sola",cSaveBtn:"Guardar",cSaved:"Guardado",cBack:"Atrás",cNext:"Siguiente",topicsTitle:"Temas por retomar",topicsSub:"Cosas que ambos han evitado. Nómbralas para decidir invertir el tiempo juntos.",topicTitleP:"El tema…",topicNoteP:"Por qué ha sido difícil / qué quieres de eso (opcional)",topicAddBtn:"Agregar tema",topicNone:"Aún no hay temas. Agrega el primero que han evitado.",markDone:"Ya lo hablamos",reopen:"Retomar otra vez",statusOpen:"por hablar",statusDone:"ya hablado",repairsPast:"Conversaciones anteriores",repairsNone:"Aún no hay conversaciones.",saveSelf:"Sálvate",close:"Cerrar",ovEyebrow:"Respira. Esto es quien eres.",ovHero:"Vuelve a lo que es verdad.",ovSetup:"Primero, configura tus verdades. Pégalas de tu Registro de Creencias Positivas — se guardan en privado, solo para ti.",ovNewBeliefL:"Mi creencia sobre mí (la nueva, la verdadera)",ovNewBeliefP:"Soy un Hijo de Dios con valor infinito…",ovEvidenceL:"La evidencia — una por línea",ovEvidenceP:"Soy hijo de Dios, porque…\nNo soy un fracaso porque…",ovSaveBeliefs:"Guardar mis verdades",ovEdit:"Editar mis verdades",ovOldL:"La creencia vieja que reemplazas (opcional)",ovOldP:"ej. No soy suficiente",ovRecordN:"Creencia",ovRemove:"Quitar",ovAddRecord:"+ Agregar otra creencia",ovTriggerL:"¿Qué lo detonó? (para conocer tus patrones)",ovTriggerP:"Qué acaba de pasar / qué lo activó…",ovGround:"Estoy centrado — guardar",ovGrounded:"Guardado. Diste la cara por ti.",groundedTL:"Centrado",groundedRecent:"Momentos de calma recientes",truthsTab:"Mi Valor",whyTab:"El Porqué",whyTitle:"¿Por qué hago esto?",whyEyebrow:"EL PORQUÉ · POR QUÉ HAGO ESTO",whyEdit:"Editar",whySave:"Guardar mi porqué",whyPlaceholder:"Escribe tu porqué — la razón real detrás del trabajo…",whyEmpty:"Escribe la declaración a la que vuelves cuando es difícil.",groundedTruthsL:"Las verdades a las que volví",prioTab:"Prioridades",prioTitle:"Lista de prioridades",prioSub:"Las cosas que te han pedido — y las que sigues posponiendo. Ponlas aquí, ordénalas, complétalas. Cumplir es como se reconstruye la confianza.",prioTaskP:"La tarea / pendiente…",prioNoteP:"Algún detalle (opcional)…",prioAddBtn:"Agregar a la lista",prioNone:"Nada en la lista aún. Agrega lo primero que has estado posponiendo.",prioHigh:"Alta",prioMed:"Media",prioLow:"Baja",sheAsked:"Ella lo pidió",prioDone:"Marcar hecho",prioReopen:"Sin hacer",prioOpenL:"por hacer",prioDueLbl:"Fecha meta (opcional)",remindBtn:"⏰ Recuérdame",dueToday:"Vence hoy",dueTomorrow:"Vence mañana",dueOverdue:"vencido",dueIn:"Vence ",secureTab:"Terreno Seguro",ssGround:"Base",ssCatch:"Atrapar",ssTrust:"Confianza",ssReflect:"Reflexión",sgStyle:"Tu patrón",sgStyleVal:"Ansioso-Preocupado",sgGaugeSub:"La ansiedad sube, la evitación va a la derecha. Lo seguro es la esquina inferior izquierda. El punto dorado es tu base; cada lectura mueve el rastro hacia lo seguro.",sgBaseL:"Base",sgLatest:"Última",sgQTitle:"¿Dónde estás hoy?",sgQSub:"Califica cada una según cómo se sintió hoy. 1 = nada, 5 = mucho. Esto ubica tu punto en el medidor.",sgScaleLo:"Nada",sgScaleHi:"Mucho",sgQA:["Me preocupó que me dejaran, me abandonaran o no ser suficiente", "Necesité que alguien me tranquilizara para sentirme bien", "Llené los vacíos sobre lo que alguien estaba pensando"],sgQV:["Me alejé o me enterré en el trabajo para evitar a la gente", "Me costó abrirme o apoyarme en alguien", "Me guardé mis sentimientos en vez de decirlos"],sgNeedAll:"Responde todas las preguntas para guardar una lectura.",sgLogReadingTitle:"Registrar lectura",sgLogReadingSub:"¿Qué tan activado estás estos días? Sé honesto — es solo data para ver moverse el rastro.",sgAnxL:"Ansiedad",sgAvoidL:"Evitación",sgLowCalm:"calma",sgHighActiv:"activado",sgLowOpen:"abierto",sgHighWall:"amurallado",sgSaveReading:"Guardar lectura",sgTargetTitle:"El camino",sgTarget1:"Ahora: 7.3 ansiedad / 4.0 evitación",sgTarget2:"3–6 meses: ansiedad ~5.5 — atrapa espirales, reduce buscar tranquilización",sgTarget3:"6–12 meses: ansiedad ~4.5 — pedir directo por defecto, evitación ≤4",sgTarget4:"Seguro: ambos bajo ~3.5 — sin sobrecorregir en un muro",catchTitle:"Atrapar una espiral",catchSub:"El momento en que la sientes subir — nómbrala, cálmala, regístrala. Cada una que detienes cuenta más que un día tranquilo.",catchDomainL:"¿Hacia dónde apunta?",catchDomMyself:"Yo",catchDomRomantic:"Esposa",catchDomKids:"Hijos",catchDomFamily:"Familia",catchDomFriends:"Amigos",catchStoryL:"La historia que me estoy contando",catchStoryP:"ej. \"No le importo\" / \"Se va a ir\"…",catchFactL:"El hecho real (¿no puedes nombrar uno? eso prueba que es historia)",catchFactP:"¿Qué sé con certeza?",catchToolsL:"Qué me calmó",toolGoodEnough:"\"Soy suficiente\"",toolBreath:"Respirar",toolPrayer:"Oración",toolStayed:"Me quedé en el cuarto",toolSpace:"Di espacio limpiamente",catchMinL:"Minutos para volver",catchStopped:"La detuve",catchRan:"Se desbordó",catchSave:"Registrar",catchNone:"Aún no hay espirales registradas.",catchStoppedTag:"detenida",catchRanTag:"desbordada",catchSituationL:"① Situación — ¿con quién estabas, haciendo qué, dónde, cuándo?",catchSituationP:"ej. Casa, ~9pm, ella salió y no dijo a dónde",catchEmotionsL:"② Emociones y sensaciones — ¿qué sentiste?",catchEmotionsP:"ej. miedo, pecho apretado, corazón acelerado, nudo en el estómago",catchIntensityL:"Intensidad",catchThoughtsL:"③ Pensamientos ansiosos — ¿qué predecías que pasaría?",catchThoughtsP:"ej. está con alguien, me va a dejar",catchBeliefL:"¿Cuánto lo creíste?",catchCopingL:"④ Afrontamiento y precauciones — ¿qué hiciste? ¿revisaste o evitaste algo?",catchCopingP:"ej. quería revisar la cámara, respiré y oré en vez de eso",catchSituationS:"Situación",catchEmotionsS:"Sentí",catchThoughtsS:"Predije",catchCopingS:"Afronté",trustTitle:"Días confiando en ella sin revisar",trustSub:"El impulso de revisar la cámara o el Wi-Fi es la espiral — no una razón para mirar. Registrar una revisión reinicia el conteo, pero es data, no fracaso.",trustBest:"Mejor racha",trustSlips:"Veces revisado",trustSlipBtn:"Revisé — regístralo con honestidad",trustSlipQ:"¿Qué te llevó a revisar?",trustTrigGone:"Llevaba rato fuera",trustTrigEve:"De noche",trustTrigAnx:"Un pensamiento ansioso",trustTrigHabit:"Solo costumbre",trustLogged:"Registrado — es data, no fracaso.",trustDay:"día",trustDays:"días",trustStarted:"La racha empezó",trustUndo:"↶ Deshacer última revisión",trustConfirmQ:"¿Registrar esta revisión? Reinicia tu racha a 0.",trustConfirmYes:"Sí, registrarla",trustConfirmNo:"Cancelar — no revisé",trustMiles:"Hitos",trustYear:"Construyendo hacia un año de confianza.",trustProgress:"días",trustNext:"Siguiente",trustToGo:"faltan",mile1:"Día 1",mile7:"1 semana",mile14:"2 semanas",mile30:"1 mes",mile60:"2 meses",mile90:"3 meses",mile180:"6 meses",mile270:"9 meses",mile365:"1 año",trustSoothe:"\"Es una mujer adulta viviendo su vida. Soy suficiente esté ella en casa o no.\"",reflectTitle:"Reflexión de hoy",reflectSub:"¿Corrí los patrones viejos o los nuevos? Chequeo honesto, una vez al día.",reflectDonts:"Patrones viejos — atrápalos",rDont1:"Llené un vacío sobre lo que ella piensa",rDont2:"Ensayé un final que no ha pasado",rDont3:"La monitoreé o revisé",rDont4:"Presioné por acuerdo / impuse mi punto",reflectDos:"Patrones nuevos — constrúyelos",rDo1:"Di espacio limpiamente, sin vigilar si funciona",rDo2:"Dije lo mío una vez y lo dejé ir",rDo3:"Me quedé en el cuarto cuando se puso incómodo",rDo4:"Me calmé en vez de necesitar tranquilización",reflectReg:"Hoy me regulé",reflectSave:"Guardar hoy",reflectSaved:"Guardado",ndTitle:"Trabajemos en esto hoy",ndReflect:"Reflexión de hoy",ndCheckin:"Registro",reflectRemind:"🔔 Recuérdame diario a las 8 PM",reflectRemindNote:"Agrega una alerta repetida de 8 PM a tu Calendario de iPhone — suena aunque la app esté cerrada.",reflectReminderTitle:"🪞 Reflexión diaria — Feeling Wheel"}
 };
 
-const STEPS={morning:["primary","intensity","needs","morningclose"],evening:["primary","intensity","needs","trigger","selftalk","physical","lessons"],moment:["primary","intensity","needs","trigger","selftalk","physical","lessons"]};
+const STEPS={morning:["primary","intensity","needs","predict","morningclose"],evening:["primary","intensity","needs","trigger","selftalk","physical","review","lessons"],moment:["primary","intensity","needs","trigger","selftalk","physical","lessons"]};
 const NEEDS={en:["To be heard","Reassurance","Affection / touch","Quality time","Space","Rest","Respect","Appreciation","Honesty","Support","Understanding","Connection","Safety","Encouragement"],es:["Ser escuchado","Consuelo","Afecto / contacto","Tiempo juntos","Espacio","Descanso","Respeto","Aprecio","Honestidad","Apoyo","Comprensión","Conexión","Seguridad","Ánimo"]};
 
 /* ===== STATE ===== */
@@ -430,7 +433,7 @@ let lang=localStorage.getItem("fw.lang")||"en";
 let mode=defaultMode(),step=0,selections=[],draft=blankDraft();
 let currentUser=null,_all=[];
 const CACHE="fw.cache",PEND="fw.pending";
-function blankDraft(){return{intensity:5,trigger:"",selftalk:"",physical:"",lessons:"",carry:"",anchor:"",needs:"",needChips:[]};}
+function blankDraft(){return{intensity:5,trigger:"",selftalk:"",physical:"",lessons:"",carry:"",anchor:"",needs:"",needChips:[],predict:"",intent:"",revPat:"",revSpeed:"",revSig:"",revTom:""};}
 function defaultMode(){const h=new Date().getHours();return (h>=4&&h<15)?"morning":"evening";}
 function checkins(){return _all.filter(e=>e.type==='checkin');}
 function parseBody(e){if(e._pb!==undefined)return e._pb;let v=null;if(e&&e.type==='journal'&&typeof e.body==='string'){try{const o=JSON.parse(e.body);if(o&&o.kind2)v=o;}catch{}}e._pb=v;return v;}
@@ -517,7 +520,46 @@ function renderWhy(){const T=UI[lang],be=whyEntry(),box=document.getElementById(
   box.innerHTML=`<div class="card"><div class="ov-eyebrow">${T.whyEyebrow}</div><div style="font-family:'Fraunces',serif;font-size:20px;line-height:1.65;color:var(--txt);margin:16px 0 8px">${paras}</div><div style="text-align:center;margin-top:8px"><button class="skip" id="whyEditBtn">${T.whyEdit}</button></div></div>`;
   document.getElementById('whyEditBtn').onclick=()=>{whyEdit=true;renderWhy();};
 }
-function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderWhy();renderPriorities();renderSecure();updateNudges();}
+/* ===== DAILY PATTERN PLAN ===== */
+let planEdit=false;
+function isPlan(e){const p=parseBody(e);return!!(p&&p.kind2==='plan');}
+function planEntry(){return _all.find(isPlan);}
+function isCP(e){const p=parseBody(e);return!!(p&&p.kind2==='cp');}
+function cpToday(){const t=localISO(Date.now());return _all.find(e=>isCP(e)&&(parseBody(e)||{}).d===t);}
+async function toggleCP(i){const t=localISO(Date.now()),e=cpToday();
+  if(e){const p=parseBody(e)||{},done=(p.done||[]).slice();const k=done.indexOf(i);if(k>=0)done.splice(k,1);else done.push(i);await updateBody(e,{kind2:'cp',d:t,done});}
+  else{await persist({type:'journal',title:'Checkpoints',body:JSON.stringify({kind2:'cp',d:t,done:[i]})});}
+  renderPlan();}
+function renderPlan(){const T=UI[lang],be=planEntry(),box=document.getElementById('planBody');if(!box)return;const p=be?(parseBody(be)||{}):{};
+  if(!be||planEdit){
+    const fl=(id,lab,ph)=>`<div class="field"><label class="fld">${lab}</label><input type="text" id="pl_${id}" placeholder="${ph||''}" value="${esc(p[id]||'')}"></div>`;
+    box.innerHTML=`<div class="card"><div class="secl">${T.planTitle}</div><div class="qsub" style="margin:6px 0 16px">${T.planSub}</div>
+      ${fl('mornCue',T.planMornL)}${fl('mornDo',T.planMornDoL)}${fl('mornTime',T.planTimeL)}
+      <div class="recdiv"></div><label class="fld">${T.planCpL}</label>
+      ${fl('cp1',T.planCp1)}${fl('cp2',T.planCp2)}${fl('cp3',T.planCp3)}
+      <div class="recdiv"></div>${fl('eveTime',T.planEveL)}${fl('eveDo',T.planEveDoL)}
+      <div class="nav"><button class="btn primary" id="planSaveBtn">${T.planSave}</button></div></div>`;
+    document.getElementById('planSaveBtn').onclick=async()=>{const g=id=>{const el=document.getElementById('pl_'+id);return el?el.value.trim():'';};
+      const obj={kind2:'plan',mornCue:g('mornCue'),mornDo:g('mornDo'),mornTime:g('mornTime'),cp1:g('cp1'),cp2:g('cp2'),cp3:g('cp3'),eveTime:g('eveTime'),eveDo:g('eveDo')};
+      if(!obj.mornCue&&!obj.cp1){toast(lang==='es'?'Escribe tu plan primero':'Write your plan first');return;}
+      if(be){await updateBody(be,obj);}else{await persist({type:'journal',title:'Daily Plan',body:JSON.stringify(obj)});}
+      planEdit=false;renderPlan();toast(lang==='es'?'Guardado':'Saved');};
+    return;}
+  const done=((parseBody(cpToday())||{}).done)||[];
+  const cps=[p.cp1,p.cp2,p.cp3].filter(Boolean);
+  const row=(l,v)=>v?`<div style="margin:7px 0;font-size:14px"><span style="color:var(--mut)">${l}:</span> ${esc(v)}</div>`:'';
+  box.innerHTML=`<div class="card"><div class="secl">${T.planTitle}</div>
+    <div style="margin-top:12px">${row(T.planMornL,p.mornCue)}${row(T.planMornDoL,p.mornDo)}${row(T.planTimeL,p.mornTime)}</div>
+    <div class="recdiv"></div><div>${row(T.planCp1,p.cp1)}${row(T.planCp2,p.cp2)}${row(T.planCp3,p.cp3)}</div>
+    <div class="recdiv"></div><div>${row(T.planEveL,p.eveTime)}${row(T.planEveDoL,p.eveDo)}</div>
+    <div style="text-align:center;margin-top:14px"><button class="skip" id="planEditBtn">${T.planEdit}</button></div></div>
+    ${cps.length?`<div class="card" style="margin-top:16px"><div class="ov-eyebrow">${T.planTodayL}</div>
+      <div style="font-size:13px;color:var(--mut);margin:6px 0 12px">${done.length}/${cps.length} ${T.planDone}</div>
+      ${cps.map((c,i)=>`<button class="pill${done.includes(i)?' on':''}" data-i="${i}" style="display:block;width:100%;text-align:left;margin-bottom:8px">${done.includes(i)?'\u2713 ':'\u25cb '}${esc(c)}</button>`).join('')}</div>`:''}`;
+  document.getElementById('planEditBtn').onclick=()=>{planEdit=true;renderPlan();};
+  box.querySelectorAll('.pill[data-i]').forEach(b=>b.onclick=()=>toggleCP(parseInt(b.dataset.i)));
+}
+function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderWhy();renderPlan();renderPriorities();renderSecure();updateNudges();}
 
 /* ===== WHEEL ===== */
 const CX=360,CY=360,R1=150,R2=250,R3=345,cores=Object.keys(DATA);
@@ -607,6 +649,8 @@ function stepInput(key){
   if(key==='lessons')return`<div class="qstn">${T.lessons}</div>${sel}${ta('lessons',T.lessonsP)}`;
   if(key==='morningclose')return`<div class="qstn">${T.carry}</div>${sel}<div class="field">${ta('carry',T.carryP)}</div><div class="field"><label class="fld">${T.anchor}</label><input type="text" id="anchor" placeholder="${T.anchorP}" value="${(draft.anchor||'').replace(/"/g,'&quot;')}"></div>`;
   if(key==='needs')return`<div class="qstn">${T.needsQ}</div><div class="qsub" style="margin:-2px 0 12px">${T.needsSub}</div><div id="needChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${NEEDS[lang].map(n=>`<button type="button" class="pill${(draft.needChips||[]).includes(n)?' on':''}" data-n="${n.replace(/"/g,'&quot;')}">${n}</button>`).join('')}</div>${ta('needs',T.needsP)}`;
+  if(key==='predict')return`<div class="qstn">${T.predictQ}</div><div class="qsub" style="margin:-2px 0 12px">${T.predictSub}</div>${ta('predict',T.predictP)}<div class="field" style="margin-top:12px"><label class="fld">${T.intentQ}</label>${ta('intent',T.intentP,2)}</div>`;
+  if(key==='review')return`<div class="qstn">${T.revPatQ}</div>${ta('revPat',T.revPatP,2)}<div class="field" style="margin-top:12px"><label class="fld">${T.revSpeedQ}</label>${ta('revSpeed',T.revSpeedP,2)}</div><div class="field"><label class="fld">${T.revSigQ}</label>${ta('revSig',T.revSigP,2)}</div><div class="field"><label class="fld">${T.revTomQ}</label>${ta('revTom',T.revTomP,2)}</div>`;
   return'';
 }
 function renderWizard(){
@@ -626,7 +670,7 @@ function renderWizard(){
     document.getElementById('nextBtn').disabled=!selections.length;
   }
   if(key==='intensity'){const rng=document.getElementById('rng');rng.oninput=()=>{draft.intensity=+rng.value;document.getElementById('rngv').textContent=rng.value;};}
-  ['trigger','selftalk','physical','lessons','carry','needs'].forEach(id=>{const el=document.getElementById(id);if(el)el.oninput=()=>draft[id]=el.value;});
+  ['trigger','selftalk','physical','lessons','carry','needs','predict','intent','revPat','revSpeed','revSig','revTom'].forEach(id=>{const el=document.getElementById(id);if(el)el.oninput=()=>draft[id]=el.value;});
   if(key==='needs'){document.querySelectorAll('#needChips .pill').forEach(p=>p.onclick=()=>{const n=p.dataset.n;draft.needChips=draft.needChips||[];const i=draft.needChips.indexOf(n);if(i>=0)draft.needChips.splice(i,1);else draft.needChips.push(n);p.classList.toggle('on');});}
   const an=document.getElementById('anchor');if(an)an.oninput=()=>draft.anchor=an.value;
   const back=document.getElementById('backBtn');if(back)back.onclick=()=>{step--;renderWizard();};
@@ -642,7 +686,7 @@ function setCrumb(){const c=document.getElementById('crumb');
 async function saveCheckin(){
   const p=selections[0];
   const _chips=(draft.needChips||[]),_note=draft.needs.trim();const _needs=[_chips.join(', '),_note].filter(Boolean).join(_chips.length&&_note?' — ':'');
-  const e={type:'checkin',mode,core:p.core,secondary:p.secondary||null,tertiary:p.tertiary||null,intensity:draft.intensity,trigger:draft.trigger.trim(),selftalk:draft.selftalk.trim(),physical:draft.physical.trim(),lessons:draft.lessons.trim(),carry:draft.carry.trim(),anchor:draft.anchor.trim(),body:JSON.stringify({f:selections.map(s=>({core:s.core,secondary:s.secondary||null,tertiary:s.tertiary||null})),needs:_needs})};
+  const e={type:'checkin',mode,core:p.core,secondary:p.secondary||null,tertiary:p.tertiary||null,intensity:draft.intensity,trigger:draft.trigger.trim(),selftalk:draft.selftalk.trim(),physical:draft.physical.trim(),lessons:draft.lessons.trim(),carry:draft.carry.trim(),anchor:draft.anchor.trim(),predict:draft.predict.trim(),intent:draft.intent.trim(),revPat:draft.revPat.trim(),revSpeed:draft.revSpeed.trim(),revSig:draft.revSig.trim(),revTom:draft.revTom.trim(),body:JSON.stringify({f:selections.map(s=>({core:s.core,secondary:s.secondary||null,tertiary:s.tertiary||null})),needs:_needs})};
   await persist(e);toast(UI[lang].saved);
   step=0;selections=[];draft=blankDraft();renderStatus();renderWizard();updateNudges();
 }
@@ -676,7 +720,7 @@ function entryCardHTML(e,T){const d=new Date(e.ts),dt=`${d.toLocaleDateString()}
   if(e.type==='journal')return`<div class="entry"><div class="hd"><div class="fl">📓 ${esc(e.title||'—')}</div><div class="dt">${dt}</div></div>${e.body?`<div class="qa">${esc(e.body).replace(/\n/g,'<br>')}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;
   const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
   const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
-  return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}<button class="del" data-id="${e.id}">delete</button></div>`;}
+  return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.predictL,e.predict)}${qa(T.intentL,e.intent)}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}${qa(T.revPatL,e.revPat)}${qa(T.revSpeedL,e.revSpeed)}${qa(T.revSigL,e.revSig)}${qa(T.revTomL,e.revTom)}<button class="del" data-id="${e.id}">delete</button></div>`;}
 let lastReportHTML='';
 function printReportIframe(){if(!lastReportHTML)return;
   const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{margin:14mm}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+lastReportHTML+'</body></html>';
@@ -698,7 +742,7 @@ function buildPrintReport(from,to,opts){const T=UI[lang];opts=opts||{feel:true,j
   const entryHTML=({e,k})=>{const d=new Date(e.ts),tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
     if(k==='j')return `<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:13.5px">${tm} \u00b7 ${lang==='es'?'Diario':'Journal'}${e.title?' \u00b7 '+esc(e.title):''}</div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap;margin-top:3px">${esc(e.body||'')}</div></div>`;
     const fl=feelingsOf(e),paths=fl.map(f=>pathStr(f)).join('; '),ms=moodScore(fl),z=ms!=null?zone(ms):null;
-    return `<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:13.5px">${tm}${modeLbl(e.mode)?' \u00b7 '+modeLbl(e.mode):''} \u00b7 ${lang==='es'?'Emociones':'Feeling wheel'}</div><div class="rpt-meta" style="margin:4px 0 8px;font-size:12.5px">${esc(paths)||'\u2014'}${e.intensity?' \u00b7 '+e.intensity+'/10':''}${ms!=null?' \u00b7 '+(lang==='es'?z.es:z.en)+' '+ms+'%':''}</div>${line(T.needsL,needsOf(e))}${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}</div>`;};
+    return `<div style="break-inside:avoid;page-break-inside:avoid;margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #ddd"><div style="font-weight:700;font-size:13.5px">${tm}${modeLbl(e.mode)?' \u00b7 '+modeLbl(e.mode):''} \u00b7 ${lang==='es'?'Emociones':'Feeling wheel'}</div><div class="rpt-meta" style="margin:4px 0 8px;font-size:12.5px">${esc(paths)||'\u2014'}${e.intensity?' \u00b7 '+e.intensity+'/10':''}${ms!=null?' \u00b7 '+(lang==='es'?z.es:z.en)+' '+ms+'%':''}</div>${line(T.needsL,needsOf(e))}${line(T.predictL,e.predict)}${line(T.intentL,e.intent)}${line(T.carry,e.carry)}${line(T.anchor,e.anchor)}${line(T.trigger,e.trigger)}${line(T.selftalk,e.selftalk)}${line(T.physical,e.physical)}${line(T.lessons,e.lessons)}${line(T.revPatL,e.revPat)}${line(T.revSpeedL,e.revSpeed)}${line(T.revSigL,e.revSig)}${line(T.revTomL,e.revTom)}</div>`;};
   const byDay={};items.forEach(it=>{const dk=localISO(it.e.ts);(byDay[dk]=byDay[dk]||[]).push(it);});
   const days=Object.keys(byDay).sort();
   const body=days.map(dk=>{const hdr=new Date(dk+'T00:00:00').toLocaleDateString(loc,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -713,7 +757,7 @@ function renderHistory(){
   const allFeels=ck.flatMap(feelingsOf);const ht=document.getElementById('histThermo');
   if(ht)ht.innerHTML=allFeels.length?thermoHTML(moodScore(allFeels),lang==='es'?'En todos tus registros':'Across all your check-ins'):`<div style="color:var(--txt-dim);font-size:13px">${lang==='es'?'Aún sin datos.':'No data yet.'}</div>`;
   const bars=document.getElementById('bars');if(bars)bars.innerHTML=cores.map(c=>[c,counts[c]]).sort((x,y)=>y[1]-x[1]).map(([c,n])=>`<div class="barrow"><div class="nm">${lang==='es'?CORE_ES[c]:c}</div><div class="bartrack"><div class="barfill" style="width:${n/max*100}%;background:${DATA[c].color}"></div></div><div class="ct">${n}</div></div>`).join('');
-  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)&&!isPriority(e)&&!isReading(e)&&!isSpiral(e)&&!isSlip(e)&&!isReflect(e)&&!isTrustStart(e)&&!isWhy(e)&&!isShare(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
+  const all=_all.filter(e=>!isTopic(e)&&!isBeliefs(e)&&!isPriority(e)&&!isReading(e)&&!isSpiral(e)&&!isSlip(e)&&!isReflect(e)&&!isTrustStart(e)&&!isWhy(e)&&!isShare(e)&&!isPlan(e)&&!isCP(e)).sort((a,b)=>new Date(b.ts)-new Date(a.ts)),box=document.getElementById('timeline');if(!box)return;
   if(!all.length){box.innerHTML=`<div class="none">${T.tlnone}</div>`;return;}
   let html='',lastDay='';
   all.forEach(e=>{const dk=new Date(e.ts).toDateString();if(dk!==lastDay){lastDay=dk;html+=`<div class="dayhdr">${dayLabel(e.ts)}</div>`;}html+=entryCardHTML(e,T);});
@@ -742,8 +786,9 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
   document.getElementById('view-prio').classList.toggle('hidden',tab!=='prio');
   document.getElementById('view-secure').classList.toggle('hidden',tab!=='secure');
   document.getElementById('view-why').classList.toggle('hidden',tab!=='why');
+  document.getElementById('view-plan').classList.toggle('hidden',tab!=='plan');
   closeDrawer();
-  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();if(tab==='secure')renderSecure();if(tab==='why')renderWhy();});
+  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();if(tab==='secure')renderSecure();if(tab==='why')renderWhy();if(tab==='plan')renderPlan();});
 function closeDrawer(){const d=document.getElementById('drawer'),sc=document.getElementById('scrim');if(d)d.classList.remove('open');if(sc)sc.classList.remove('open');}
 function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('scrim').classList.add('open');}
 document.getElementById('hambBtn').onclick=openDrawer;
@@ -822,7 +867,7 @@ function applyLang(){const T=UI[lang];
   set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('reportL',T.reportL);set('rFromL',T.rFromL);set('rToL',T.rToL);set('printBtn',T.printBtn);set('incFeel',T.incFeelL);set('incJourn',T.incJournL);set('cmRepair',lang==='es'?'Hablarlo':'Talk it through');set('cmShare',lang==='es'?'Abrirme':'Open up');set('foot',T.foot,true);
   set('tabConnect',T.connect);set('topicsTitleL',T.topicsTitle);set('topicsSubL',T.topicsSub);set('repairsPastL',T.repairsPast);
-  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);set('tabSecure',T.secureTab);set('tabWhy',T.whyTab);
+  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);set('tabSecure',T.secureTab);set('tabWhy',T.whyTab);set('tabPlan',T.planTab);
   {const ss=document.getElementById('secureSub');if(ss){const m=ss.querySelectorAll('.mode');if(m[0])m[0].textContent=T.ssGround;if(m[1])m[1].textContent=T.ssCatch;if(m[2])m[2].textContent=T.ssTrust;if(m[3])m[3].textContent=T.ssReflect;}}
   set('prioTitleL',T.prioTitle);set('prioSubL',T.prioSub);set('sheAskedL',T.sheAsked);
   {const pt=document.getElementById('prioTitle');if(pt)pt.placeholder=T.prioTaskP;const pn=document.getElementById('prioNote');if(pn)pn.placeholder=T.prioNoteP;const pa=document.getElementById('prioAddBtn');if(pa)pa.textContent=T.prioAddBtn;const pd=document.getElementById('prioDueL');if(pd)pd.textContent=T.prioDueLbl;
@@ -1250,7 +1295,7 @@ function updateNudges(){if(typeof todaysReflect!=='function')return;const pend=p
     else{bar.innerHTML=`<div class="nudge"><div class="nudge-h">💬 ${T.ndTitle}</div><div class="nudge-items">${pend.map(p=>`<button class="nudge-chip" data-tab="${p.tab}" data-sub="${p.sub||''}">${p.label} →</button>`).join('')}</div></div>`;
       bar.querySelectorAll('.nudge-chip').forEach(c=>c.onclick=()=>goTab(c.dataset.tab,c.dataset.sub||''));}}}
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();try{renderWhy();}catch(e){}renderPriorities();try{renderSecure();}catch(e){}try{updateNudges();}catch(e){}
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();try{renderWhy();}catch(e){}try{renderPlan();}catch(e){}renderPriorities();try{renderSecure();}catch(e){}try{updateNudges();}catch(e){}
 sbRestore().then(x=>handleSession(x)).catch(()=>handleSession(null));
 </script>
 </body>
