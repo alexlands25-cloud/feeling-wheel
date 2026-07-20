@@ -348,7 +348,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 30 · 2026-07-20</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 31 · 2026-07-20</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -764,7 +764,8 @@ function tiDefault(){return[
  {name:'Separate rooms / arm\u2019s length in public, door closing at night',cat:'relational',pattern:'Abandonment anxiety \u2014 exclusion flavor',rate:4,was:8,note:'Fires nightly when the kids go down. Prepared for it each morning.'},
  {name:'She leaves for hours without saying where',cat:'situational',pattern:'Abandonment anxiety \u2014 not-knowing',rate:5,was:9,note:'The urge to know IS the spiral. Fact vs fear.'},
  {name:'Suspecting a lie / story not adding up',cat:'internal',pattern:'Abandonment anxiety + \u201cI can\u2019t trust anyone\u201d belief',rate:5,was:10,note:'Old wiring makes suspicion feel like proof. No tests, no digging.'},
- {name:'Feeling I don\u2019t matter / not being told things',cat:'identity',pattern:'Abandonment anxiety \u2014 worth',rate:4,was:8,note:'Hits the \u201cI am not good enough\u201d belief. Answer with my truths.'}
+ {name:'Feeling I don\u2019t matter / not being told things',cat:'identity',pattern:'Abandonment anxiety \u2014 worth',rate:4,was:8,note:'Hits the \u201cI am not good enough\u201d belief. Answer with my truths.'},
+ {name:'She denies talking to another man / an answer that doesn\u2019t add up',cat:'relational',pattern:'Abandonment anxiety \u2014 certainty-seeking \u2192 checking \u2192 ambush',rate:9,was:null,note:'Body fires first: blood pounding in neck, faster than thought. I had a full minute before I knocked \u2014 THAT minute is where STOP goes. No ambush questions. No forensics.'}
 ];}
 async function tiSave(list){const e=tiEntry(),obj={kind2:'triginv',list};if(e){await updateBody(e,obj);}else{await persist({type:'journal',title:'Trigger Inventory',body:JSON.stringify(obj)});}}
 function renderTrigInv(){const box=document.getElementById('trigBody');if(!box)return;const es=lang==='es';
