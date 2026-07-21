@@ -348,7 +348,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 31 · 2026-07-20</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 32 · 2026-07-21</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -1122,6 +1122,20 @@ document.getElementById('topicAddBtn').onclick=async()=>{
 
 applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderWhy();renderPriorities();renderSecure();};
 function greeting(){const h=new Date().getHours(),T=UI[lang];return h<12?T.gMorning:h<18?T.gAfternoon:T.gEvening;}
+/* keep time-of-day fresh when the app is reopened from background */
+let _lastDay=localISO(Date.now()),_lastMode=mode;
+function refreshTimeOfDay(){
+  const g=document.getElementById('greet');if(g)g.textContent=greeting();
+  const nowDay=localISO(Date.now()),dm=defaultMode();
+  // only auto-switch the wizard if the user hasn't started entering anything
+  const untouched=step===0&&selections.length===0;
+  if(untouched&&dm!==mode){mode=dm;try{renderModes();}catch(e){}try{renderWizard();}catch(e){}}
+  if(nowDay!==_lastDay){_lastDay=nowDay;try{renderHistory();}catch(e){}try{updateNudges();}catch(e){}try{renderPlan();}catch(e){}try{renderSecure();}catch(e){}}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshTimeOfDay();});
+window.addEventListener('focus',refreshTimeOfDay);
+window.addEventListener('pageshow',refreshTimeOfDay);
+setInterval(refreshTimeOfDay,60000);
 function applyLang(){const T=UI[lang];
   const set=(id,v,html)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
   set('title',T.title);set('greet',greeting());set('langBtn',T.lang);set('tabCheck',T.check);set('tabJournal',T.journal);set('tabHistory',T.history);
