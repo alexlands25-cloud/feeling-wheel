@@ -348,7 +348,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 33 · 2026-07-21</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 34 · 2026-07-21</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -977,7 +977,7 @@ function entryCardHTML(e,T){const d=new Date(e.ts),dt=`${d.toLocaleDateString()}
   if(e.type==='journal')return`<div class="entry"><div class="hd"><div class="fl">📓 ${esc(e.title||'—')}</div><div class="dt">${dt}</div></div>${e.body?`<div class="qa">${esc(e.body).replace(/\n/g,'<br>')}</div>`:''}<button class="del" data-id="${e.id}">delete</button></div>`;
   const modeLbl={morning:T.modeM,evening:T.modeE,moment:T.modeI}[e.mode]||'';const qa=(l,v)=>v?`<div class="qa"><span>${l}</span>${esc(v)}</div>`:'';
   const fl=feelingsOf(e),chips=fl.map(chipHTML).join(' '),paths=fl.map(f=>pathStr(f)).join('  ·  ');
-  return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag">${modeLbl}</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.predictL,e.predict)}${qa(T.intentL,e.intent)}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}${qa(T.revPatL,e.revPat)}${qa(T.revSpeedL,e.revSpeed)}${qa(T.revSigL,e.revSig)}${qa(T.revTomL,e.revTom)}<button class="del" data-id="${e.id}">delete</button></div>`;}
+  return`<div class="entry"><div class="hd"><div class="fl" style="flex-wrap:wrap;gap:6px">${chips} <span class="tag modefix" data-id="${e.id}" style="cursor:pointer">${modeLbl} ✎</span></div><div class="dt">${dt}</div></div><div class="meta">${paths}${e.intensity?` · ${e.intensity}/10`:''}</div>${qa(T.needsL,needsOf(e))}${qa(T.predictL,e.predict)}${qa(T.intentL,e.intent)}${qa(T.carry,e.carry)}${qa(T.anchor,e.anchor)}${qa(T.trigger,e.trigger)}${qa(T.selftalk,e.selftalk)}${qa(T.physical,e.physical)}${qa(T.lessons,e.lessons)}${qa(T.revPatL,e.revPat)}${qa(T.revSpeedL,e.revSpeed)}${qa(T.revSigL,e.revSig)}${qa(T.revTomL,e.revTom)}<button class="del" data-id="${e.id}">delete</button></div>`;}
 let lastReportHTML='';
 function printReportIframe(){if(!lastReportHTML)return;
   const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{margin:14mm}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+lastReportHTML+'</body></html>';
@@ -1019,7 +1019,11 @@ function renderHistory(){
   let html='',lastDay='';
   all.forEach(e=>{const dk=new Date(e.ts).toDateString();if(dk!==lastDay){lastDay=dk;html+=`<div class="dayhdr">${dayLabel(e.ts)}</div>`;}html+=entryCardHTML(e,T);});
   box.innerHTML=html;
-  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderHistory();renderJournalList();renderStatus();});}
+  box.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{await removeEntry(b.dataset.id);renderHistory();renderJournalList();renderStatus();});
+  box.querySelectorAll('.modefix').forEach(t=>t.onclick=async()=>{const id=t.dataset.id,e=_all.find(x=>String(x.id)===String(id));if(!e)return;
+    const order=['morning','evening','moment'];e.mode=order[(order.indexOf(e.mode)+1)%order.length];setCache();
+    if(currentUser&&!String(e.id).startsWith('local-')){try{await sbUpdate(e.id,{mode:e.mode});}catch(err){}}
+    toast(lang==='es'?'Tipo corregido':'Type corrected');renderHistory();renderStatus();updateNudges();});}
 function streak(a){if(!a.length)return 0;const days=new Set(a.map(e=>new Date(e.ts).toDateString()));let s=0,d=new Date();while(days.has(d.toDateString())){s++;d.setDate(d.getDate()-1);}if(s===0){d=new Date();d.setDate(d.getDate()-1);while(days.has(d.toDateString())){s++;d.setDate(d.getDate()-1);}}return s;}
 function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
