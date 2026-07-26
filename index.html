@@ -354,7 +354,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 40 · 2026-07-23</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 41 · 2026-07-26</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -488,13 +488,13 @@ async function sbDelete(id){await rest('/entries?id=eq.'+encodeURIComponent(id),
 
 async function persist(e){
   e.ts=e.ts||new Date().toISOString();
-  if(!currentUser){const p=pending();p.push(e);setPending(p);_all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();return;}
+  if(!currentUser){const p=pending();p.push(e);setPending(p);_all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();twAfterSave();return;}
   try{
     const data=await sbInsert(entryToRow(e,currentUser.id));
-    _all.unshift(rowToEntry(data));setCache();
+    _all.unshift(rowToEntry(data));setCache();twAfterSave();
   }catch(err){
     const p=pending();p.push(e);setPending(p);
-    _all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();
+    _all.unshift({...e,id:'local-'+Date.now(),_pending:true});setCache();twAfterSave();
     toast(UI[lang].offline);
   }
 }
@@ -937,20 +937,34 @@ function todaySteps(){const es=lang==='es',h=new Date().getHours(),t=new Date().
    mk('scan2',es?'Escaneo corporal 2':'Body scan 2','5:00 PM',scans>=2,h>=16,'tools'),
    mk('echeck',es?'Registro de noche':'Evening check-in','8:00 PM',cks.some(e=>e.mode==='evening'),h>=17,'checkin'),
    mk('reflect',es?'Reflexi\u00f3n del d\u00eda':'Daily reflection','8:00 PM',!!todaysReflect(),h>=17,'secure','reflect')];}
+function twAllSteps(){let steps=todaySteps();
+  try{const pe=planEntry();if(pe){const pp=parseBody(pe)||{};const cps=[pp.cp1,pp.cp2,pp.cp3].filter(Boolean);
+    if(cps.length){const dn=(((parseBody(cpToday())||{}).done)||[]).length;const es=lang==='es';
+      steps.splice(1,0,{id:'cps',title:(es?'Puntos del d\u00eda':'Daily checkpoints')+' ('+dn+'/'+cps.length+')',hint:'8 \u00b7 12 \u00b7 5',done:dn>=cps.length,avail:true,skipped:false,tab:'plan',sub:''});}}}catch(e){}
+  return steps;}
+function twAfterSave(){try{const id=window._twStep;if(!id)return;const st=twAllSteps().find(x=>x.id===id);if(!st||!st.done)return;window._twStep=null;const es=lang==='es';
+  const steps=twAllSteps();let nx=null;for(const x of steps){if(x.avail&&!x.done&&!x.skipped){nx=x;break;}}
+  toast(nx?((es?'\u2713 Listo \u2014 sigue: ':'\u2713 Done \u2014 next: ')+nx.title):(es?'\u2713 D\u00eda completo':'\u2713 Day complete'));
+  window._twNav=true;goTab('today');}catch(e){}}
 function renderToday(){const box=document.getElementById('todayBody');if(!box)return;const es=lang==='es';
   let steps=todaySteps();
   try{const pe=planEntry();if(pe){const pp=parseBody(pe)||{};const cps=[pp.cp1,pp.cp2,pp.cp3].filter(Boolean);
     if(cps.length){const dn=(((parseBody(cpToday())||{}).done)||[]).length;
       steps.splice(1,0,{id:'cps',title:(es?'Puntos del d\u00eda':'Daily checkpoints')+' ('+dn+'/'+cps.length+')',hint:'8 \u00b7 12 \u00b7 5',done:dn>=cps.length,avail:true,skipped:false,tab:'plan',sub:''});}}}catch(e){}
   const doneN=steps.filter(x=>x.done).length,total=steps.length;
-  let nextId=null;for(const x of steps){if(x.avail&&!x.done&&!x.skipped){nextId=x.id;break;}}
+  let nextId=null,nextStep=null;for(const x of steps){if(x.avail&&!x.done&&!x.skipped){nextId=x.id;nextStep=x;break;}}
+  let waitStep=null;if(!nextStep){for(const x of steps){if(!x.done&&!x.skipped){waitStep=x;break;}}}
+  const heroN=nextStep?(steps.indexOf(nextStep)+1):0;
+  const hero=nextStep?`<div class="card" style="border:1px solid rgba(212,175,55,.45);background:linear-gradient(160deg,rgba(212,175,55,.10),transparent)"><div style="color:var(--gold);font-size:11.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${es?'AHORA \u00b7 PASO':'NOW \u00b7 STEP'} ${heroN} ${es?'DE':'OF'} ${total}</div><div style="font-family:'Fraunces',Georgia,serif;font-size:21px;color:var(--txt);margin-top:5px">${nextStep.title}</div><div class="meta" style="margin-top:2px">${nextStep.hint}</div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn primary" style="flex:1" data-go="${nextStep.id}">${es?'Empezar':'Start'}</button>${nextStep.id==='cps'?'':`<button class="skip" data-skip="${nextStep.id}">${es?'Saltar':'Skip'}</button>`}</div></div>`:
+   waitStep?`<div class="card" style="text-align:center"><div class="meta">${es?'Al d\u00eda por ahora \u2014 pr\u00f3ximo paso':'Caught up for now \u2014 next step'}: <b style="color:#c7cdd9">${waitStep.title}</b> \u00b7 ${waitStep.hint}</div></div>`:
+   `<div class="card" style="text-align:center;color:#5fd08a;font-weight:700">\u2713 ${es?'D\u00eda completo \u2014 bien hecho':'Day complete \u2014 well done'}</div>`;
   const d=new Date(),hdr=d.toLocaleDateString(es?'es':'en-US',{weekday:'long',month:'long',day:'numeric'});
-  const rows=steps.map(x=>{const isNext=x.id===nextId;
+  const rows=steps.map((x,xi)=>{const isNext=x.id===nextId;
     const ic=x.done?'<span style="color:#5fd08a;font-weight:800">\u2713</span>':x.skipped?'<span style="color:#8a93a8">\u2014</span>':x.avail?(isNext?'<span style="color:var(--gold);font-weight:800">\u25b6</span>':'<span style="color:#8a93a8">\u25cb</span>'):'<span style="color:#565e70">\u00b7</span>';
     const tl=x.done?`<span style="color:#9aa3b5">${x.title}</span>`:x.skipped?`<span style="color:#8a93a8;text-decoration:line-through">${x.title}</span> <small style="color:#8a93a8">${es?'saltado':'skipped'}</small>`:x.avail?`<b style="${isNext?'color:var(--txt)':'color:#c7cdd9'}">${x.title}</b>`:`<span style="color:#79808f">${x.title}</span>`;
     const btns=(!x.done&&x.avail)?`<div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><button class="btn ${isNext?'primary':'ghost'}" style="padding:7px 13px;font-size:12.5px" data-go="${x.id}">${es?'Ir':'Go'}</button>${x.skipped||x.id==='cps'?'':`<button class="skip" style="font-size:12px" data-skip="${x.id}">${es?'Saltar':'Skip'}</button>`}</div>`:'';
-    return`<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><div style="width:16px;text-align:center">${ic}</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;line-height:1.35">${tl}</div><div class="meta" style="margin-top:1px">${x.hint}</div></div>${btns}</div>`;}).join('');
-  box.innerHTML=`<div class="card"><div style="color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${es?'HOY':'TODAY'} \u00b7 ${hdr}</div>
+    return`<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><div style="width:30px;text-align:center;flex-shrink:0"><span style="color:#565e70;font-size:11.5px">${xi+1}</span> ${ic}</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;line-height:1.35">${tl}</div><div class="meta" style="margin-top:1px">${x.hint}</div></div>${btns}</div>`;}).join('');
+  box.innerHTML=`${hero}<div class="card" style="margin-top:12px"><div style="color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700">${es?'HOY':'TODAY'} \u00b7 ${hdr}</div>
    <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><div style="font-family:'Fraunces',Georgia,serif;font-size:26px;color:var(--txt)">${doneN}/${total}</div><div class="meta">${es?'pasos de hoy':'today\u2019s steps'}</div></div>
    <div class="pbar" style="margin-top:8px"><div class="pfill" style="width:${total?doneN/total*100:0}%"></div></div>
    <div style="margin-top:10px">${rows}</div>
@@ -959,7 +973,7 @@ function renderToday(){const box=document.getElementById('todayBody');if(!box)re
     if(x.tab==='tools')toolSel='scan';
     if(x.id==='mcheck'&&step===0&&!selections.length)mode='morning';
     if(x.id==='echeck'&&step===0&&!selections.length)mode='evening';
-    goTab(x.tab,x.sub);try{renderModes();renderWizard();}catch(e){}});
+    window._twNav=true;goTab(x.tab,x.sub);window._twStep=x.id;try{renderModes();renderWizard();}catch(e){}});
   box.querySelectorAll('[data-skip]').forEach(b=>b.onclick=async()=>{await persist({type:'journal',title:'Skipped',body:JSON.stringify({kind2:'skip',step:b.dataset.skip,date:todayKey()})});toast(es?'Registrado como saltado':'Logged as skipped');renderToday();updateNudges();});
 }
 function renderActive(){renderStatus();renderJournalList();renderHistory();renderConnect();renderTopics();renderRepairs();renderTruths();renderToday();renderWhy();renderCompass();renderSecself();renderActivated();renderTools();renderTrigInv();renderTimeline();renderPlan();renderPriorities();renderSecure();updateNudges();}
@@ -1187,6 +1201,7 @@ document.getElementById('importFile').onchange=ev=>{const f=ev.target.files[0];i
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const tab=t.dataset.tab;
   document.getElementById('view-checkin').classList.toggle('hidden',tab!=='checkin');
   document.getElementById('view-journal').classList.toggle('hidden',tab!=='journal');
+  if(!window._twNav)window._twStep=null;window._twNav=false;
   document.getElementById('view-history').classList.toggle('hidden',tab!=='history');
   document.getElementById('view-connect').classList.toggle('hidden',tab!=='connect');
   document.getElementById('view-truths').classList.toggle('hidden',tab!=='truths');
