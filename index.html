@@ -244,6 +244,7 @@
     <div class="drawer-h">Feeling Wheel</div>
     <button class="tab ditem active" data-tab="checkin" id="tabCheck">Check in</button>
     <button class="tab ditem" data-tab="today" id="tabToday">Today</button>
+    <button class="tab ditem" data-tab="mood" id="tabMood">Mood</button>
     <button class="tab ditem" data-tab="plan" id="tabPlan">Daily Plan</button>
     <button class="tab ditem" data-tab="prevent" id="tabPrevent">Prevention</button>
     <button class="tab ditem" data-tab="prio" id="tabPrio">Priorities</button>
@@ -311,6 +312,7 @@
 
   <section id="view-plan" class="hidden"><div id="planBody"></div></section>
   <section id="view-prevent" class="hidden"><div id="prevBody"></div></section>
+  <section id="view-mood" class="hidden"><div id="moodBody"></div></section>
 
   <section id="view-today" class="hidden"><div id="todayBody"></div></section>
   <section id="view-why" class="hidden"><div id="whyBody"></div></section>
@@ -358,7 +360,7 @@
       <input type="file" id="importFile" accept="application/json" class="hidden">
     </div>
     <div class="secl" id="reportL" style="margin-top:22px">Print report</div>
-    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 45 · 2026-08-06</div>
+    <div class="rpt-sub" style="font-size:11px;opacity:.55;margin:-2px 0 10px">build 48 · 2026-08-07</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
       <div><label class="fld" id="rFromL">From</label><input type="date" id="rFrom"></div>
       <div><label class="fld" id="rToL">To</label><input type="date" id="rTo"></div>
@@ -1275,8 +1277,214 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
   document.getElementById('view-timeline').classList.toggle('hidden',tab!=='timeline');
   document.getElementById('view-plan').classList.toggle('hidden',tab!=='plan');
   document.getElementById('view-prevent').classList.toggle('hidden',tab!=='prevent');
+  document.getElementById('view-mood').classList.toggle('hidden',tab!=='mood');
   closeDrawer();
-  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();if(tab==='secure')renderSecure();if(tab==='today')renderToday();if(tab==='why')renderWhy();if(tab==='twolists')renderTwoLists();if(tab==='compass')renderCompass();if(tab==='secself')renderSecself();if(tab==='activated'){actStep=0;renderActivated();}if(tab==='tools'){stopStep=0;renderTools();}if(tab==='triginv')renderTrigInv();if(tab==='timeline')renderTimeline();if(tab==='plan')renderPlan();if(tab==='prevent')renderPrevent();});
+  if(tab==='journal')renderJournalList();if(tab==='history')renderHistory();if(tab==='connect'){renderConnect();renderTopics();renderRepairs();}if(tab==='truths')renderTruths();if(tab==='prio')renderPriorities();if(tab==='secure')renderSecure();if(tab==='today')renderToday();if(tab==='why')renderWhy();if(tab==='twolists')renderTwoLists();if(tab==='compass')renderCompass();if(tab==='secself')renderSecself();if(tab==='activated'){actStep=0;renderActivated();}if(tab==='tools'){stopStep=0;renderTools();}if(tab==='triginv')renderTrigInv();if(tab==='timeline')renderTimeline();if(tab==='plan')renderPlan();if(tab==='prevent')renderPrevent();if(tab==='mood'){moodPick=false;moodDay=null;renderMood();}});
+/* ===== MOOD GRAPH v3 (mood -1..11 + trigger dropdown + wheel cascade + week analysis) ===== */
+let moodDay=null,moodPick=0,moodPendV=null,moodSel=null,moodTrigSel=[],moodLowNudge=false,moodView='day',moodFeel={c:'',s:'',t:''};
+function moodDateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function moodGet(day){try{return JSON.parse(localStorage.getItem('fw.mood.'+day))||[]}catch{return[]}}
+function moodSet(day,arr){try{localStorage.setItem('fw.mood.'+day,JSON.stringify(arr))}catch{}}
+function moodColor(v){return 'hsl('+Math.round((v+1)/12*130)+',62%,55%)';}
+function moodTrigGroups(){const es=lang==='es';return[
+ {g:es?'ELLA / CASA':'HER / HOME',items:[
+  {id:'home',t:es?'Llegada a casa / split':'Coming home / the split'},
+  {id:'door',t:es?'Puerta del cuarto / noche solo':'Bedroom door / night alone'},
+  {id:'herp',t:es?'Momento bueno con ella':'Good moment with her'},
+  {id:'herm',t:es?'Momento dif\u00edcil con ella':'Hard moment with her'},
+  {id:'sil',t:es?'Silencio / sin respuesta':'Silence / no reply'},
+  {id:'plan',t:es?'Cambio de plan':'Plan change'},
+  {id:'mil',t:es?'Visita / suegra en casa':'Visitor / mother-in-law home'}]},
+ {g:es?'TRABAJO / EPIC':'WORK / EPIC',items:[
+  {id:'wstress',t:es?'Estr\u00e9s / problema en Epic':'Stress / problem at Epic'},
+  {id:'wclient',t:es?'Cliente / cobro / estimado':'Client / collection / estimate'},
+  {id:'wwin',t:es?'Logro en el trabajo':'Win at work'},
+  {id:'wteam',t:es?'Equipo / empleados':'Team / employees'}]},
+ {g:es?'FAMILIA':'FAMILY',items:[
+  {id:'layla',t:es?'Tiempo con Layla':'Time with Layla'},
+  {id:'kids',t:es?'Hijos':'Kids'},
+  {id:'mom',t:es?'Mam\u00e1 / su salud':'Mom / her health'}]},
+ {g:es?'CUERPO / MENTE':'BODY / MIND',items:[
+  {id:'night',t:es?'Madrugada 3am / mal sue\u00f1o':'3am / bad sleep'},
+  {id:'tired',t:es?'Cansancio':'Tiredness'},
+  {id:'gym',t:es?'Gym / ejercicio':'Gym / exercise'},
+  {id:'rum',t:es?'Rumiaci\u00f3n / recuerdos':'Rumination / memories'},
+  {id:'social',t:es?'Redes / Instagram':'Social media / Instagram'},
+  {id:'sax',t:es?'Saxo / m\u00fasica / cocinar':'Sax / music / cooking'},
+  {id:'faith',t:es?'Fe / oraci\u00f3n / iglesia':'Faith / prayer / church'}]},
+ {g:es?'OTROS':'OTHER',items:[
+  {id:'friends',t:es?'Amigos (Javier / Barbara)':'Friends (Javier / Barbara)'},
+  {id:'work',t:es?'Trabajo / Epic (general)':'Work / Epic (general)'},
+  {id:'fam',t:es?'Familia (general)':'Family (general)'},
+  {id:'win',t:es?'Logro / ejercicio':'Win / exercise'},
+  {id:'other',t:es?'Otro':'Other'}]}
+];}
+function moodTrigName(id){const gs=moodTrigGroups();for(const g of gs){const f=g.items.find(i=>i.id===id);if(f)return f.t;}return id;}
+function moodFeelPath(f){if(!f||!f.c)return'';const es=lang==='es';let s=(es&&typeof CORE_ES!=='undefined'&&CORE_ES[f.c])?CORE_ES[f.c]:f.c;if(f.s)s+=' \u203a '+f.s;if(f.t)s+=' \u203a '+f.t;return s;}
+function moodShift(days){const p=moodDay.split('-');const d=new Date(+p[0],+p[1]-1,+p[2]);d.setDate(d.getDate()+(moodView==='week'?days*7:days));moodDay=moodDateKey(d);moodPick=0;moodSel=null;moodLowNudge=false;renderMood();}
+function renderMood(){const box=document.getElementById('moodBody');if(!box)return;const es=lang==='es';
+ if(!moodDay)moodDay=moodDateKey(new Date());
+ const today=moodDateKey(new Date());const isToday=moodDay===today;
+ const noteEl=document.getElementById('moodNote');const noteKeep=noteEl?noteEl.value:'';
+ const tog='<div class="modes" style="margin-bottom:12px"><button class="mode'+(moodView==='day'?' active':'')+'" id="moodVDay">'+(es?'D\u00eda':'Day')+'</button><button class="mode'+(moodView==='week'?' active':'')+'" id="moodVWeek">'+(es?'Semana':'Week')+'</button></div>';
+ if(moodView==='week'){renderMoodWeek(box,tog);return;}
+ const pts=moodGet(moodDay).slice().sort((a,b)=>a.t-b.t);
+ const p0=moodDay.split('-');const dObj=new Date(+p0[0],+p0[1]-1,+p0[2]);
+ const dLbl=dObj.toLocaleDateString(es?'es':'en-US',{weekday:'short',month:'short',day:'numeric'});
+ const W=340,H=215,L=30,R=10,T=14,B=26;
+ const xOf=t=>{const d=new Date(t);const h=d.getHours()+d.getMinutes()/60;return L+h/24*(W-L-R);};
+ const yOf=v=>T+(11-v)/12*(H-T-B);
+ let grid='';
+ [-1,2,5,8,11].forEach(v=>{grid+='<line x1="'+L+'" y1="'+yOf(v)+'" x2="'+(W-R)+'" y2="'+yOf(v)+'" stroke="'+(v===5?'var(--gold)':'rgba(234,237,247,.10)')+'" stroke-width="1"'+(v===5?' stroke-dasharray="4 4" opacity=".8"':'')+'/><text x="'+(L-6)+'" y="'+(yOf(v)+3.5)+'" fill="var(--txt-dim)" font-size="10" text-anchor="end">'+v+'</text>';});
+ [0,6,12,18,24].forEach(h=>{const xx=L+h/24*(W-L-R);grid+='<text x="'+xx+'" y="'+(H-8)+'" fill="var(--txt-dim)" font-size="10" text-anchor="middle">'+h+'h</text>';});
+ const zones='<rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(yOf(5)-T)+'" fill="rgba(95,208,138,.05)"/><rect x="'+L+'" y="'+yOf(5)+'" width="'+(W-L-R)+'" height="'+(H-B-yOf(5))+'" fill="rgba(224,82,82,.06)"/>';
+ let line='',dots='';
+ if(pts.length){line='<polyline fill="none" stroke="rgba(234,237,247,.5)" stroke-width="2" points="'+pts.map(p=>xOf(p.t).toFixed(1)+','+yOf(p.v).toFixed(1)).join(' ')+'"/>';
+  dots=pts.map(p=>{const sel=moodSel===p.t;return '<circle cx="'+xOf(p.t).toFixed(1)+'" cy="'+yOf(p.v).toFixed(1)+'" r="'+(sel?7.5:5.5)+'" fill="'+moodColor(p.v)+'" stroke="'+(sel?'var(--gold)':'var(--ink)')+'" stroke-width="'+(sel?2.5:1.5)+'"/><circle class="mood-dot" data-t="'+p.t+'" cx="'+xOf(p.t).toFixed(1)+'" cy="'+yOf(p.v).toFixed(1)+'" r="14" fill="transparent" style="cursor:pointer"/>';}).join('');}
+ const empty=pts.length?'':'<text x="'+((L+W-R)/2)+'" y="'+((T+H-B)/2)+'" fill="var(--txt-dim)" font-size="12" text-anchor="middle">'+(es?'Sin puntos todav\u00eda \u2014 registra el primero':'No points yet \u2014 log the first one')+'</text>';
+ const avg=pts.length?(pts.reduce((s,p)=>s+p.v,0)/pts.length):null;
+ const lo=pts.length?Math.min.apply(null,pts.map(p=>p.v)):null;
+ const hi=pts.length?Math.max.apply(null,pts.map(p=>p.v)):null;
+ /* ----- picker step 1: level ----- */
+ let picker='';
+ if(moodPick===1&&isToday){let btns='';for(let v=11;v>=-1;v--){const tag=v===11?(es?' \u00b7 en la cima':' \u00b7 on top'):v===5?' \u00b7 neutral':v===-1?(es?' \u00b7 en el fondo':' \u00b7 rock bottom'):'';
+  btns+='<button class="mood-v" data-v="'+v+'" style="background:'+moodColor(v)+'22;border:1.5px solid '+moodColor(v)+';color:var(--txt);border-radius:10px;padding:8px 0;font-weight:800;font-size:14.5px;width:100%">'+v+'<span style="font-weight:600;font-size:12px;opacity:.75">'+tag+'</span></button>';}
+  picker='<div class="card" style="margin-top:12px"><div class="qstn" style="font-size:16px">'+(es?'\u00bfC\u00f3mo est\u00e1 tu \u00e1nimo ahorita?':'How is your mood right now?')+'</div><div class="qsub" style="margin:4px 0 12px">'+(es?'La hora se captura sola \u2014 solo elige el nivel':'Time is captured automatically \u2014 just pick the level')+'</div><div style="display:flex;flex-direction:column;gap:5px">'+btns+'</div><button class="skip" id="moodCancel" style="margin-top:10px;width:100%">'+(es?'Cancelar':'Cancel')+'</button></div>';}
+ /* ----- picker step 2: trigger dropdown + wheel cascade + note ----- */
+ if(moodPick===2&&isToday&&moodPendV!==null){
+  let tOpts='<option value="">\uff0b '+(es?'Agregar disparador\u2026':'Add a trigger\u2026')+'</option>';
+  moodTrigGroups().forEach(g=>{tOpts+='<optgroup label="'+g.g+'">';g.items.forEach(i=>{if(moodTrigSel.indexOf(i.id)<0)tOpts+='<option value="'+i.id+'">'+i.t+'</option>';});tOpts+='</optgroup>';});
+  const selChips=moodTrigSel.map(id=>'<span style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:600;border:1.5px solid var(--gold);color:var(--gold);background:rgba(232,176,75,.12)">'+moodTrigName(id)+'<button class="mood-tgx" data-id="'+id+'" style="background:none;border:none;color:var(--gold);font-weight:800;font-size:14px;padding:0;cursor:pointer">\u00d7</button></span>').join(' ');
+  const selStyle='width:100%;background:var(--ink-3);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px';
+  let fc='<option value="">'+(es?'Emoci\u00f3n \u2014 centro de la rueda (opcional)\u2026':'Feeling \u2014 wheel center (optional)\u2026')+'</option>';
+  Object.keys(DATA).forEach(c=>{fc+='<option value="'+c+'"'+(moodFeel.c===c?' selected':'')+'>'+((es&&CORE_ES[c])?CORE_ES[c]:c)+'</option>';});
+  let fsHtml='',ftHtml='';
+  if(moodFeel.c&&DATA[moodFeel.c]){let fs='<option value="">'+(es?'Segundo anillo\u2026':'Second ring\u2026')+'</option>';
+   Object.keys(DATA[moodFeel.c].secondaries).forEach(s=>{fs+='<option value="'+s+'"'+(moodFeel.s===s?' selected':'')+'>'+s+'</option>';});
+   fsHtml='<select id="moodFs" style="'+selStyle+';margin-top:8px;border-left:3px solid '+DATA[moodFeel.c].color+'">'+fs+'</select>';
+   if(moodFeel.s&&DATA[moodFeel.c].secondaries[moodFeel.s]){let ft='<option value="">'+(es?'Anillo exterior\u2026':'Outer ring\u2026')+'</option>';
+    DATA[moodFeel.c].secondaries[moodFeel.s].forEach(t2=>{ft+='<option value="'+t2+'"'+(moodFeel.t===t2?' selected':'')+'>'+t2+'</option>';});
+    ftHtml='<select id="moodFt" style="'+selStyle+';margin-top:8px;border-left:3px solid '+DATA[moodFeel.c].color+'">'+ft+'</select>';}}
+  picker='<div class="card" style="margin-top:12px">'+
+   '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="min-width:40px;height:40px;border-radius:11px;background:'+moodColor(moodPendV)+'33;border:2px solid '+moodColor(moodPendV)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px">'+moodPendV+'</div><div class="qstn" style="font-size:16px">'+(es?'\u00bfQu\u00e9 lo dispar\u00f3?':'What triggered it?')+'</div></div>'+
+   '<select id="moodTrigSelect" style="'+selStyle+'">'+tOpts+'</select>'+
+   (selChips?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">'+selChips+'</div>':'')+
+   '<div class="qsub" style="margin:14px 0 6px">'+(es?'\u00bfY qu\u00e9 emoci\u00f3n es? \u2014 la rueda, de adentro hacia afuera':'And what feeling is it? \u2014 the wheel, inside out')+'</div>'+
+   '<select id="moodFc" style="'+selStyle+(moodFeel.c&&DATA[moodFeel.c]?';border-left:3px solid '+DATA[moodFeel.c].color:'')+'">'+fc+'</select>'+fsHtml+ftHtml+
+   '<div class="field" style="margin-top:12px"><label class="fld">'+(es?'\u00bfQu\u00e9 pas\u00f3? (opcional)':'What happened? (optional)')+'</label><textarea id="moodNote" rows="2" placeholder="'+(es?'Una l\u00ednea basta\u2026':'One line is enough\u2026')+'"></textarea></div>'+
+   '<button class="btn primary" id="moodSave" style="width:100%;margin-top:10px">'+(es?'Guardar':'Save')+'</button>'+
+   '<button class="skip" id="moodSkip" style="width:100%;margin-top:8px">'+(es?'Guardar sin detalle':'Save without detail')+'</button>'+
+  '</div>';}
+ /* ----- selected point detail ----- */
+ let detail='';
+ const selP=moodSel!==null?pts.find(p=>p.t===moodSel):null;
+ if(selP){const d=new Date(selP.t);const hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const tgs=(selP.g||[]).map(id=>'<span style="border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;border:1.5px solid var(--gold);color:var(--gold)">'+moodTrigName(id)+'</span>').join(' ');
+  const fp=moodFeelPath(selP.f);
+  const fCol=(selP.f&&selP.f.c&&DATA[selP.f.c])?DATA[selP.f.c].color:'var(--txt-soft)';
+  detail='<div class="card" style="margin-top:12px;border:1px solid var(--gold)">'+
+   '<div style="display:flex;align-items:center;gap:10px"><div style="min-width:40px;height:40px;border-radius:11px;background:'+moodColor(selP.v)+'33;border:2px solid '+moodColor(selP.v)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px">'+selP.v+'</div><div><div style="font-weight:700">'+hh+' \u00b7 '+dLbl+'</div><div style="font-size:12px;color:var(--txt-dim)">'+(selP.v>5?(es?'Zona buena':'Good zone'):selP.v<5?(es?'Zona baja':'Low zone'):'Neutral')+'</div></div><button class="del mood-close" style="margin-left:auto">\u00d7</button></div>'+
+   (fp?'<div style="margin-top:12px;font-size:13.5px;font-weight:700;color:'+fCol+'">'+fp+'</div>':'')+
+   (tgs?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'+tgs+'</div>':'')+
+   (selP.n?'<div style="margin-top:10px;font-size:13.5px;color:var(--txt-soft);line-height:1.5;border-left:2px solid var(--line);padding-left:10px">'+selP.n.replace(/</g,'&lt;')+'</div>':'')+
+   ((!tgs&&!selP.n&&!fp)?'<div style="margin-top:10px;font-size:12.5px;color:var(--txt-dim)">'+(es?'Sin detalle guardado en este punto.':'No detail saved on this point.')+'</div>':'')+
+   '<button class="skip mood-delpt" data-t="'+selP.t+'" style="margin-top:12px;width:100%;color:#E05252">'+(es?'Borrar este punto':'Delete this point')+'</button>'+
+  '</div>';}
+ let nudge='';
+ if(moodLowNudge){nudge='<div class="card" style="margin-top:12px;border:1px solid rgba(224,82,82,.4)"><div style="font-size:13.5px;line-height:1.5">'+(es?'Punto bajo registrado. Si lo necesitas, el ancla est\u00e1 a un tap.':'Low point logged. If you need it, the anchor is one tap away.')+'</div><button class="btn" id="moodTools" style="width:100%;margin-top:10px">'+(es?'Ir a Herramientas \u2693':'Go to Tools \u2693')+'</button></div>';}
+ let list='';
+ pts.slice().reverse().forEach(p=>{const d=new Date(p.t);const hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const hasD=(p.g&&p.g.length)||p.n||(p.f&&p.f.c);
+  list+='<div class="entry mood-row" data-t="'+p.t+'" style="display:flex;align-items:center;gap:10px;cursor:pointer'+(moodSel===p.t?';border:1px solid var(--gold)':'')+'"><div style="min-width:36px;height:36px;border-radius:10px;background:'+moodColor(p.v)+'33;border:1.5px solid '+moodColor(p.v)+';display:flex;align-items:center;justify-content:center;font-weight:800">'+p.v+'</div><div style="flex:1;color:var(--txt-soft);font-size:13px">'+hh+(hasD?' \u00b7 <span style="color:var(--txt-dim);font-size:11.5px">'+(es?'con detalle':'has detail')+'</span>':'')+'</div><span style="color:var(--txt-dim)">\u203a</span></div>';});
+ box.innerHTML=tog+'<div class="card">'+
+  '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+   '<button class="skip" id="moodPrev" style="padding:4px 14px;font-size:18px">\u2039</button>'+
+   '<div style="font-weight:700">'+dLbl+(isToday?(es?' \u00b7 hoy':' \u00b7 today'):'')+'</div>'+
+   '<button class="skip" id="moodNext" style="padding:4px 14px;font-size:18px;'+(isToday?'opacity:.25':'')+'">\u203a</button>'+
+  '</div>'+
+  '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+zones+grid+line+dots+empty+'</svg>'+
+  (avg!==null?'<div style="display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--txt-soft);margin-top:6px"><span>'+(es?'Promedio':'Avg')+': <b style="color:'+moodColor(Math.round(avg))+'">'+avg.toFixed(1)+'</b></span><span>Min: '+lo+'</span><span>Max: '+hi+'</span><span>'+(es?'Puntos':'Points')+': '+pts.length+'</span></div>':'')+
+  (pts.length?'<div style="text-align:center;font-size:11.5px;color:var(--txt-dim);margin-top:4px">'+(es?'Toca un punto para ver qu\u00e9 pas\u00f3':'Tap a point to see what happened')+'</div>':'')+
+ '</div>'+
+ (isToday&&moodPick===0?'<button class="btn primary" id="moodAddBtn" style="width:100%;margin-top:12px;font-size:16px;padding:14px">\uff0b '+(es?'Registrar mi \u00e1nimo ahora':'Log my mood now')+'</button>':'')+
+ picker+nudge+detail+
+ (list?'<div class="secl" style="margin:22px 0 10px">'+(es?'Registros del d\u00eda':'Entries for the day')+'</div>'+list:'');
+ /* ----- wiring ----- */
+ const keepN=document.getElementById('moodNote');if(keepN&&noteKeep)keepN.value=noteKeep;
+ const vd=document.getElementById('moodVDay');if(vd)vd.onclick=()=>{moodView='day';moodSel=null;renderMood();};
+ const vw=document.getElementById('moodVWeek');if(vw)vw.onclick=()=>{moodView='week';moodPick=0;moodSel=null;renderMood();};
+ const ab=document.getElementById('moodAddBtn');if(ab)ab.onclick=()=>{moodPick=1;moodSel=null;moodLowNudge=false;renderMood();};
+ const mc=document.getElementById('moodCancel');if(mc)mc.onclick=()=>{moodPick=0;renderMood();};
+ const mp=document.getElementById('moodPrev');if(mp)mp.onclick=()=>moodShift(-1);
+ const mn=document.getElementById('moodNext');if(mn&&!isToday)mn.onclick=()=>moodShift(1);
+ box.querySelectorAll('.mood-v').forEach(b=>b.onclick=()=>{moodPendV=parseInt(b.dataset.v,10);moodTrigSel=[];moodFeel={c:'',s:'',t:''};moodPick=2;renderMood();});
+ const ts=document.getElementById('moodTrigSelect');if(ts)ts.onchange=()=>{if(ts.value){moodTrigSel.push(ts.value);renderMood();}};
+ box.querySelectorAll('.mood-tgx').forEach(b=>b.onclick=()=>{const i=moodTrigSel.indexOf(b.dataset.id);if(i>=0)moodTrigSel.splice(i,1);renderMood();});
+ const fcE=document.getElementById('moodFc');if(fcE)fcE.onchange=()=>{moodFeel={c:fcE.value,s:'',t:''};renderMood();};
+ const fsE=document.getElementById('moodFs');if(fsE)fsE.onchange=()=>{moodFeel.s=fsE.value;moodFeel.t='';renderMood();};
+ const ftE=document.getElementById('moodFt');if(ftE)ftE.onchange=()=>{moodFeel.t=ftE.value;renderMood();};
+ function moodCommit(withDetail){const note=document.getElementById('moodNote');const n=(withDetail&&note)?note.value.trim():'';
+  const f=(withDetail&&moodFeel.c)?{c:moodFeel.c,s:moodFeel.s,t:moodFeel.t}:null;
+  const arr=moodGet(today);const rec={t:Date.now(),v:moodPendV,g:withDetail?moodTrigSel.slice():[],n:n};if(f)rec.f=f;arr.push(rec);moodSet(today,arr);
+  moodLowNudge=moodPendV<=2;moodPick=0;moodPendV=null;moodTrigSel=[];moodFeel={c:'',s:'',t:''};renderMood();toast(es?'\u00c1nimo guardado \u2713':'Mood saved \u2713');}
+ const ms=document.getElementById('moodSave');if(ms)ms.onclick=()=>moodCommit(true);
+ const mk=document.getElementById('moodSkip');if(mk)mk.onclick=()=>moodCommit(false);
+ const mt=document.getElementById('moodTools');if(mt)mt.onclick=()=>{moodLowNudge=false;const tb=document.querySelector('.tab[data-tab="tools"]');if(tb)tb.click();};
+ box.querySelectorAll('.mood-dot,.mood-row').forEach(el=>el.onclick=()=>{const t=+el.dataset.t;moodSel=(moodSel===t)?null:t;moodPick=0;renderMood();});
+ box.querySelectorAll('.mood-close').forEach(b=>b.onclick=(e)=>{e.stopPropagation();moodSel=null;renderMood();});
+ box.querySelectorAll('.mood-delpt').forEach(b=>b.onclick=()=>{const t=+b.dataset.t;moodSet(moodDay,moodGet(moodDay).filter(p=>p.t!==t));moodSel=null;renderMood();});
+}
+/* ----- WEEK VIEW: 7-day averages + what lifted me / what dropped me ----- */
+function renderMoodWeek(box,tog){const es=lang==='es';
+ const p0=moodDay.split('-');const endD=new Date(+p0[0],+p0[1]-1,+p0[2]);
+ const days=[];for(let i=6;i>=0;i--){const d=new Date(endD);d.setDate(d.getDate()-i);days.push(d);}
+ const today=moodDateKey(new Date());
+ const dayData=days.map(d=>{const k=moodDateKey(d);const pts=moodGet(k);const avg=pts.length?pts.reduce((s,p)=>s+p.v,0)/pts.length:null;return{k:k,d:d,pts:pts,avg:avg};});
+ const W=340,H=185,L=30,R=10,T=14,B=30;
+ const yOf=v=>T+(11-v)/12*(H-T-B);
+ const xOf=i=>L+(i+.5)/7*(W-L-R);
+ let grid='';
+ [-1,2,5,8,11].forEach(v=>{grid+='<line x1="'+L+'" y1="'+yOf(v)+'" x2="'+(W-R)+'" y2="'+yOf(v)+'" stroke="'+(v===5?'var(--gold)':'rgba(234,237,247,.10)')+'" stroke-width="1"'+(v===5?' stroke-dasharray="4 4" opacity=".8"':'')+'/><text x="'+(L-6)+'" y="'+(yOf(v)+3.5)+'" fill="var(--txt-dim)" font-size="10" text-anchor="end">'+v+'</text>';});
+ const dNames=es?['D','L','M','X','J','V','S']:['S','M','T','W','T','F','S'];
+ let cols='';dayData.forEach((dd,i)=>{
+  cols+='<text x="'+xOf(i)+'" y="'+(H-14)+'" fill="var(--txt-dim)" font-size="10" text-anchor="middle">'+dNames[dd.d.getDay()]+'</text><text x="'+xOf(i)+'" y="'+(H-3)+'" fill="var(--txt-dim)" font-size="9" text-anchor="middle">'+dd.d.getDate()+'</text>';
+  cols+='<rect class="mood-wday" data-k="'+dd.k+'" x="'+(xOf(i)-(W-L-R)/14)+'" y="'+T+'" width="'+((W-L-R)/7)+'" height="'+(H-T-B)+'" fill="transparent" style="cursor:pointer"/>';});
+ const withAvg=dayData.map((dd,i)=>({i:i,avg:dd.avg})).filter(x=>x.avg!==null);
+ let line='',dots='';
+ if(withAvg.length>1)line='<polyline fill="none" stroke="rgba(234,237,247,.5)" stroke-width="2" points="'+withAvg.map(x=>xOf(x.i).toFixed(1)+','+yOf(x.avg).toFixed(1)).join(' ')+'"/>';
+ withAvg.forEach(x=>{dots+='<circle cx="'+xOf(x.i).toFixed(1)+'" cy="'+yOf(x.avg).toFixed(1)+'" r="6" fill="'+moodColor(Math.round(x.avg))+'" stroke="var(--ink)" stroke-width="1.5" pointer-events="none"/>';});
+ const zones='<rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(yOf(5)-T)+'" fill="rgba(95,208,138,.05)"/><rect x="'+L+'" y="'+yOf(5)+'" width="'+(W-L-R)+'" height="'+(H-B-yOf(5))+'" fill="rgba(224,82,82,.06)"/>';
+ const empty=withAvg.length?'':'<text x="'+((L+W-R)/2)+'" y="'+((T+H-B)/2)+'" fill="var(--txt-dim)" font-size="12" text-anchor="middle">'+(es?'Sin datos esta semana':'No data this week')+'</text>';
+ /* trigger analysis across the 7 days */
+ const upC={},dnC={};let nUp=0,nDn=0;
+ dayData.forEach(dd=>dd.pts.forEach(p=>{(p.g||[]).forEach(id=>{if(p.v>5){upC[id]=(upC[id]||0)+1;nUp++;}else if(p.v<5){dnC[id]=(dnC[id]||0)+1;nDn++;}});}));
+ const top=(o)=>Object.keys(o).sort((a,b)=>o[b]-o[a]).slice(0,4);
+ const chip=(id,n,col)=>'<span style="border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;border:1.5px solid '+col+';color:'+col+'">'+moodTrigName(id)+' \u00d7'+n+'</span>';
+ const upT=top(upC).map(id=>chip(id,upC[id],'#5fd08a')).join(' ');
+ const dnT=top(dnC).map(id=>chip(id,dnC[id],'#E05252')).join(' ');
+ const rangeLbl=days[0].toLocaleDateString(es?'es':'en-US',{month:'short',day:'numeric'})+' \u2013 '+days[6].toLocaleDateString(es?'es':'en-US',{month:'short',day:'numeric'});
+ const weekAvg=withAvg.length?withAvg.reduce((s,x)=>s+x.avg,0)/withAvg.length:null;
+ const isCur=moodDay===today;
+ box.innerHTML=tog+'<div class="card">'+
+  '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+   '<button class="skip" id="moodPrev" style="padding:4px 14px;font-size:18px">\u2039</button>'+
+   '<div style="font-weight:700">'+rangeLbl+'</div>'+
+   '<button class="skip" id="moodNext" style="padding:4px 14px;font-size:18px;'+(isCur?'opacity:.25':'')+'">\u203a</button>'+
+  '</div>'+
+  '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+zones+grid+line+cols+dots+empty+'</svg>'+
+  (weekAvg!==null?'<div style="text-align:center;font-size:12px;color:var(--txt-soft);margin-top:6px">'+(es?'Promedio de la semana':'Week average')+': <b style="color:'+moodColor(Math.round(weekAvg))+'">'+weekAvg.toFixed(1)+'</b></div>':'')+
+  '<div style="text-align:center;font-size:11.5px;color:var(--txt-dim);margin-top:4px">'+(es?'Toca un d\u00eda para abrirlo':'Tap a day to open it')+'</div>'+
+ '</div>'+
+ (dnT?'<div class="card" style="margin-top:12px"><div class="secl" style="margin:0 0 10px;color:#E05252">'+(es?'Qu\u00e9 me baj\u00f3 esta semana':'What dropped me this week')+'</div><div style="display:flex;flex-wrap:wrap;gap:7px">'+dnT+'</div></div>':'')+
+ (upT?'<div class="card" style="margin-top:12px"><div class="secl" style="margin:0 0 10px;color:#5fd08a">'+(es?'Qu\u00e9 me subi\u00f3 esta semana':'What lifted me this week')+'</div><div style="display:flex;flex-wrap:wrap;gap:7px">'+upT+'</div></div>':'')+
+ ((!dnT&&!upT)?'<div class="card" style="margin-top:12px"><div style="font-size:13px;color:var(--txt-dim)">'+(es?'A\u00fan no hay disparadores registrados esta semana. Marca los disparadores al guardar tus puntos y aqu\u00ed aparecer\u00e1 el an\u00e1lisis.':'No triggers logged this week yet. Tag triggers when saving points and the analysis will show here.')+'</div></div>':'');
+ const vd=document.getElementById('moodVDay');if(vd)vd.onclick=()=>{moodView='day';renderMood();};
+ const vw=document.getElementById('moodVWeek');if(vw)vw.onclick=()=>{moodView='week';renderMood();};
+ const mp=document.getElementById('moodPrev');if(mp)mp.onclick=()=>moodShift(-1);
+ const mn=document.getElementById('moodNext');if(mn&&!isCur)mn.onclick=()=>moodShift(1);
+ box.querySelectorAll('.mood-wday').forEach(el=>el.onclick=()=>{moodDay=el.dataset.k;moodView='day';moodSel=null;renderMood();});
+}
+
 /* ===== PREVENTION SYSTEM (Module 5: prevention > in-the-moment intervention) ===== */
 function prevItems(){const es=lang==='es';return[
  {id:'morn',grp:es?'MA\u00d1ANA \u2014 con el caf\u00e9':'MORNING \u2014 with coffee',t:es?'Ritual de valores':'Values ritual',d:es?'Dios \u00b7 Familia \u00b7 Verdad + una intenci\u00f3n + un reto que anticipo hoy':'God \u00b7 Family \u00b7 Truth + one intention + one challenge I anticipate today'},
@@ -1402,7 +1610,7 @@ function applyLang(){const T=UI[lang];
   set('logoutBtn',T.logout);set('stTotalL',T.ckTotal);set('stWeekL',T.ckWeek);set('stStreakL',T.ckStreak);set('spendL',T.spend);set('balanceL',T.balance);
   set('exportBtn',T.exportB);set('importBtn',T.importB);set('timelineL',T.timeline);set('reportL',T.reportL);set('rFromL',T.rFromL);set('rToL',T.rToL);set('printBtn',T.printBtn);set('incFeel',T.incFeelL);set('incJourn',T.incJournL);set('cmRepair',lang==='es'?'Hablarlo':'Talk it through');set('cmShare',lang==='es'?'Abrirme':'Open up');set('foot',T.foot,true);
   set('tabConnect',T.connect);set('topicsTitleL',T.topicsTitle);set('topicsSubL',T.topicsSub);set('repairsPastL',T.repairsPast);
-  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);set('tabSecure',T.secureTab);set('tabToday',T.todayTab);set('tabWhy',T.whyTab);set('tabCompass',T.compassTab);set('tabSecself',T.secselfTab);set('tabActivated',T.actTab);set('tabTools',T.toolsTab);set('tabTriginv',T.trigTab);set('tabTimeline',T.tlTab);set('tabPlan',T.planTab);const _tl2=document.getElementById('tabTwolists');if(_tl2)_tl2.textContent=lang==='es'?'Las Dos Listas':'Two Lists';
+  set('fabL',T.saveSelf);set('ovCloseL',T.close);set('tabTruths',T.truthsTab);set('tabPrio',T.prioTab);set('tabSecure',T.secureTab);set('tabToday',T.todayTab);set('tabWhy',T.whyTab);set('tabCompass',T.compassTab);set('tabSecself',T.secselfTab);set('tabActivated',T.actTab);set('tabTools',T.toolsTab);set('tabTriginv',T.trigTab);set('tabTimeline',T.tlTab);set('tabPlan',T.planTab);const _tl2=document.getElementById('tabTwolists');if(_tl2)_tl2.textContent=lang==='es'?'Las Dos Listas':'Two Lists';const _md=document.getElementById('tabMood');if(_md)_md.textContent=lang==='es'?'\u00c1nimo':'Mood';
   {const ss=document.getElementById('secureSub');if(ss){const m=ss.querySelectorAll('.mode');if(m[0])m[0].textContent=T.ssGround;if(m[1])m[1].textContent=T.ssCatch;if(m[2])m[2].textContent=T.ssTrust;if(m[3])m[3].textContent=T.ssReflect;}}
   set('prioTitleL',T.prioTitle);set('prioSubL',T.prioSub);set('sheAskedL',T.sheAsked);
   {const pt=document.getElementById('prioTitle');if(pt)pt.placeholder=T.prioTaskP;const pn=document.getElementById('prioNote');if(pn)pn.placeholder=T.prioNoteP;const pa=document.getElementById('prioAddBtn');if(pa)pa.textContent=T.prioAddBtn;const pd=document.getElementById('prioDueL');if(pd)pd.textContent=T.prioDueLbl;
@@ -1834,7 +2042,7 @@ function updateNudges(){if(typeof todaysReflect!=='function')return;const pend=p
     else{bar.innerHTML=`<div class="nudge"><div class="nudge-h">💬 ${T.ndTitle}</div><div class="nudge-items">${pend.map(p=>`<button class="nudge-chip" data-tab="${p.tab}" data-sub="${p.sub||''}">${p.label} →</button>`).join('')}</div></div>`;
       bar.querySelectorAll('.nudge-chip').forEach(c=>c.onclick=()=>goTab(c.dataset.tab,c.dataset.sub||''));}}}
 
-applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();try{renderToday();}catch(e){}try{renderWhy();}catch(e){}try{renderCompass();}catch(e){}try{renderSecself();}catch(e){}try{renderActivated();}catch(e){}try{renderTools();}catch(e){}try{renderTrigInv();}catch(e){}try{renderTimeline();}catch(e){}try{renderPlan();}catch(e){}renderPriorities();try{renderSecure();}catch(e){}try{updateNudges();}catch(e){}
+applyLang();renderModes();renderStatus();renderWizard();applyJournalText();renderConnect();renderTopics();renderRepairs();renderTruths();try{renderToday();}catch(e){}try{renderWhy();}catch(e){}try{renderCompass();}catch(e){}try{renderSecself();}catch(e){}try{renderActivated();}catch(e){}try{renderTools();}catch(e){}try{renderTrigInv();}catch(e){}try{renderTimeline();}catch(e){}try{renderPlan();}catch(e){}try{renderMood();}catch(e){}renderPriorities();try{renderSecure();}catch(e){}try{updateNudges();}catch(e){}
 try{const _tb=document.querySelector('[data-tab="today"]');if(_tb)_tb.click();}catch(e){}
 sbRestore().then(x=>handleSession(x)).catch(()=>handleSession(null));
 </script>
